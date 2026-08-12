@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Personalise FinTrack — profile, currency, theme, notifications and data management.">
+  <title>Settings · FinTrack</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232563eb'/%3E%3Cpath d='M30 70V38l20 18 20-24v38z' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/settings.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</head>
+<body data-page="settings">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+      <a class="brand" href="index.html" aria-label="FinTrack home">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 7.9 20.6 6.5l-7.1 7.1-4-4L2 17z"/><path d="M2 20h20v2H2z"/></svg>
+        </span>
+        <span>
+          <span class="brand__name">FinTrack</span><br>
+          <span class="brand__tag">Money Manager</span>
+        </span>
+      </a>
+      <nav id="sidebarNav" aria-label="Main navigation"></nav>
+      <div class="sidebar__footer">
+        <button class="sidebar-footer-link" type="button" data-action="logout">
+          <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          <span>Log out</span>
+        </button>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="main-area">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sidebar">
+          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <div class="topbar__title">
+          <h1>Settings</h1>
+          <p>Personalise your FinTrack workspace</p>
+        </div>
+        <div class="topbar__actions">
+          <button class="icon-btn" type="button" data-theme-toggle aria-pressed="false">
+            <svg class="icon-sun" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-5.4-5.4c0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+          </button>
+          <a class="user-chip" href="settings.html" aria-current="page">
+            <span class="avatar" data-profile-initials aria-hidden="true">FT</span>
+            <span class="user-chip__name" data-profile-name>FinTrack User</span>
+          </a>
+        </div>
+      </header>
+
+      <main class="page" id="main">
+        <div class="settings-layout">
+          <div>
+            <!-- Preferences -->
+            <section class="card settings-section" aria-labelledby="prefsHeading">
+              <div class="settings-section__head">
+                <h2 id="prefsHeading">Preferences</h2>
+                <p>Saved instantly to your browser's local storage.</p>
+              </div>
+
+              <form id="settingsForm" novalidate>
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="profileName">Profile name</label>
+                    <input class="input" type="text" id="profileName" maxlength="40" placeholder="Your full name" autocomplete="name">
+                    <span class="error-msg" id="errProfileName"></span>
+                  </div>
+                  <div class="field">
+                    <label for="currencySelect">Currency</label>
+                    <select class="select" id="currencySelect"></select>
+                    <span class="hint">Default currency is BDT (৳).</span>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-row__info">
+                    <h3>Appearance</h3>
+                    <p>Choose a light or dark interface. Your choice is remembered after refresh.</p>
+                  </div>
+                  <div class="theme-choice">
+                    <div class="theme-option">
+                      <input type="radio" name="themeChoice" id="themeLight" value="light">
+                      <label for="themeLight">
+                        <span class="theme-preview theme-preview--light" aria-hidden="true">
+                          <span class="theme-preview__side"></span>
+                          <span class="theme-preview__main"><span class="theme-preview__bar"></span><span class="theme-preview__bar"></span></span>
+                        </span>
+                        <span>Light</span>
+                      </label>
+                    </div>
+                    <div class="theme-option">
+                      <input type="radio" name="themeChoice" id="themeDark" value="dark">
+                      <label for="themeDark">
+                        <span class="theme-preview theme-preview--dark" aria-hidden="true">
+                          <span class="theme-preview__side"></span>
+                          <span class="theme-preview__main"><span class="theme-preview__bar"></span><span class="theme-preview__bar"></span></span>
+                        </span>
+                        <span>Dark</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-row__info">
+                    <h3>Notifications</h3>
+                    <p>Show toast confirmations for successful actions and budget alerts.</p>
+                  </div>
+                  <label class="switch" for="notificationsToggle">
+                    <input type="checkbox" id="notificationsToggle">
+                    <span class="switch__track" aria-hidden="true"></span>
+                    <span class="small muted" id="notificationsLabel">Enabled</span>
+                  </label>
+                </div>
+
+                <div class="row row--between mt-5">
+                  <p class="small muted">Changes apply immediately across all pages.</p>
+                  <button class="btn btn--primary" type="submit">Save Settings</button>
+                </div>
+              </form>
+            </section>
+
+            <!-- Data management -->
+            <section class="card settings-section" aria-labelledby="dataHeading">
+              <div class="settings-section__head">
+                <h2 id="dataHeading">Data management</h2>
+                <p>FinTrack stores everything in this browser. Back it up or restore it here.</p>
+              </div>
+              <div class="data-actions">
+                <button class="btn btn--ghost" type="button" id="exportBtn">Export JSON backup</button>
+                <button class="btn btn--ghost" type="button" id="importBtn">Import backup</button>
+                <input type="file" id="importFile" accept="application/json" class="visually-hidden" aria-hidden="true" tabindex="-1">
+                <button class="btn btn--ghost" type="button" id="sampleBtn">Reload sample data</button>
+              </div>
+            </section>
+
+            <!-- Danger zone -->
+            <section class="card settings-section danger-zone" aria-labelledby="dangerHeading">
+              <div class="settings-section__head">
+                <h2 id="dangerHeading">Danger zone</h2>
+                <p>Permanently remove all transactions and budgets from this browser.</p>
+              </div>
+              <button class="btn btn--danger" type="button" id="clearBtn">Delete all data</button>
+            </section>
+          </div>
+
+          <!-- Sidebar summary -->
+          <aside class="stack">
+            <section class="card" aria-labelledby="profileHeading">
+              <h2 class="visually-hidden" id="profileHeading">Profile preview</h2>
+              <div class="profile-preview">
+                <div class="avatar-upload">
+                  <span class="avatar avatar--lg" data-profile-initials aria-hidden="true">FT</span>
+                </div>
+                <h3 data-profile-name>FinTrack User</h3>
+                <p data-profile-email>user@example.com</p>
+                <div class="photo-controls">
+                  <button class="btn btn--primary btn--sm" type="button" id="uploadPhotoBtn">
+                    <svg viewBox="0 0 24 24"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                    <span>Upload photo</span>
+                  </button>
+                  <button class="btn btn--ghost btn--sm" type="button" id="removePhotoBtn" hidden>
+                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    <span>Remove</span>
+                  </button>
+                </div>
+                <input type="file" id="photoInput" accept="image/*" class="visually-hidden" aria-hidden="true" tabindex="-1">
+              </div>
+              <div class="stat-list" id="accountStats"></div>
+            </section>
+
+            <section class="card" aria-labelledby="aboutHeading">
+              <h2 class="card__title" id="aboutHeading">About FinTrack</h2>
+              <p class="small muted mt-2">
+                FinTrack is a client-side personal finance dashboard built with HTML5, CSS3, vanilla JavaScript
+                and Chart.js. No accounts, no servers — your data never leaves this device.
+              </p>
+              <div class="stat-list mt-4">
+                <div class="stat-list__row"><span>Version</span><span>1.0.0</span></div>
+                <div class="stat-list__row"><span>Storage</span><span>LocalStorage</span></div>
+                <div class="stat-list__row"><span>Charts</span><span>Chart.js 4</span></div>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/settings.js"></script>
+</body>
+</html>

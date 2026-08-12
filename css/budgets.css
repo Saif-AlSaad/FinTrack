@@ -1,0 +1,45 @@
+/* ==========================================================================
+   FinTrack — budgets.css
+   ========================================================================== */
+
+.budget-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+
+.budget-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+
+.budget-card { display: flex; flex-direction: column; gap: 1rem; position: relative; overflow: hidden; }
+.budget-card__head { display: flex; align-items: center; gap: .8rem; }
+.budget-card__title { font-size: .98rem; font-weight: 700; }
+.budget-card__month { font-size: .75rem; color: var(--text-muted); }
+.budget-card__actions { margin-left: auto; display: flex; gap: .15rem; }
+
+.budget-card__figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.figure { display: flex; flex-direction: column; gap: .1rem; }
+.figure__label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); font-weight: 700; }
+.figure__value { font-size: .95rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.figure--over .figure__value { color: var(--expense); }
+
+.budget-card__progress { display: flex; flex-direction: column; gap: .4rem; }
+.budget-card__percent { display: flex; justify-content: space-between; font-size: .78rem; color: var(--text-muted); font-weight: 600; }
+
+.budget-alert {
+  display: flex; align-items: flex-start; gap: .5rem;
+  padding: .6rem .7rem; border-radius: 10px;
+  font-size: .78rem; font-weight: 500;
+}
+.budget-alert svg { width: 16px; height: 16px; fill: currentColor; flex: none; margin-top: .1rem; }
+.budget-alert--warning { background: var(--warning-soft); color: var(--warning); }
+.budget-alert--over { background: var(--expense-soft); color: var(--expense); }
+
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.status-dot--normal { background: var(--income); }
+.status-dot--warning { background: var(--warning); }
+.status-dot--over { background: var(--expense); }
+
+.month-picker { display: flex; align-items: center; gap: .5rem; }
+.month-picker .input { width: 170px; }
+
+@media (max-width: 1280px) { .budget-overview { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+  .budget-overview { grid-template-columns: 1fr; }
+  .budget-grid { grid-template-columns: 1fr; }
+}

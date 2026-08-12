@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome to FinTrack</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%230f172a'/%3E%3Cpath d='M30 70V38l20 18 20-24v38z' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .brand__name {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      will-change: transform;
+    }
+    .brand__name .char {
+      display: inline-block;
+      transform-origin: center bottom;
+    }
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); padding: 1.5rem; }
+    .auth-container { width: 100%; max-width: 440px; }
+    .auth-brand { text-align: center; margin-bottom: 2rem; }
+    .auth-brand .brand__mark { margin: 0 auto 1rem; width: 48px; height: 48px; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); }
+    .auth-brand .brand__name { font-size: 1.5rem; font-weight: 800; }
+    
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 2rem;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .auth-header { text-align: center; margin-bottom: 1.75rem; }
+    .auth-header h1 { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+    .auth-header p { font-size: .875rem; color: var(--text-muted); margin-top: .35rem; }
+    
+    .auth-form { display: flex; flex-direction: column; gap: 1.1rem; }
+    .auth-form .btn { margin-top: .5rem; padding: .75rem; font-size: .95rem; }
+    
+    .auth-footer { text-align: center; margin-top: 1.75rem; font-size: .875rem; color: var(--text-muted); }
+    .auth-footer a { color: var(--brand); font-weight: 600; cursor: pointer; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    /* Switch transitions */
+    [data-view="register"] .view-login,
+    [data-view="login"] .view-register { display: none; }
+  </style>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</head>
+<body data-view="login">
+
+  <div class="auth-container">
+    <div class="auth-brand">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 7.9 20.6 6.5l-7.1 7.1-4-4L2 17z"/><path d="M2 20h20v2H2z"/></svg>
+      </span>
+      <div class="brand__name" id="authBrandName">FinTrack</div>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-header view-login">
+        <h1>Welcome back</h1>
+        <p>Enter your details to access your dashboard.</p>
+      </div>
+      <div class="auth-header view-register">
+        <h1>Create an account</h1>
+        <p>Start tracking your finances today. Data stays on your device.</p>
+      </div>
+
+      <form id="authForm" class="auth-form" novalidate>
+        <div class="field view-register">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" class="input" placeholder="e.g. Ayesha Rahman" autocomplete="name">
+          <span class="error-msg" id="errName"></span>
+        </div>
+
+        <div class="field">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" class="input" placeholder="name@example.com" autocomplete="email">
+          <span class="error-msg" id="errEmail"></span>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="input" placeholder="••••••••" autocomplete="current-password">
+          <span class="error-msg" id="errPassword"></span>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--block view-login">Sign In</button>
+        <button type="submit" class="btn btn--primary btn--block view-register">Create Account</button>
+      </form>
+
+      <div class="auth-footer view-login">
+        Don't have an account? <a id="toggleToRegister">Sign up</a>
+      </div>
+      <div class="auth-footer view-register">
+        Already have an account? <a id="toggleToLogin">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

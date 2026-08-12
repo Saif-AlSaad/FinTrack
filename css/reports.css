@@ -1,0 +1,47 @@
+/* ==========================================================================
+   FinTrack — reports.css
+   ========================================================================== */
+
+.period-tabs {
+  display: inline-flex; gap: .25rem; padding: .25rem;
+  background: var(--surface-3); border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+.period-tab {
+  padding: .45rem .9rem; border-radius: 6px;
+  font-size: .82rem; font-weight: 600; color: var(--text-muted);
+  transition: all var(--transition);
+}
+.period-tab:hover { color: var(--text); }
+.period-tab.is-active { background: var(--surface); color: var(--brand); box-shadow: var(--shadow-xs); }
+
+.reports-split { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.25rem; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+.kpi {
+  padding: 1.1rem 1.2rem; border-radius: var(--radius);
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.kpi__label { font-size: .73rem; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); font-weight: 700; }
+.kpi__value { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: .3rem; letter-spacing: -.02em; }
+.kpi__hint { font-size: .76rem; color: var(--text-muted); margin-top: .15rem; }
+
+.breakdown-list { display: flex; flex-direction: column; gap: .9rem; }
+.breakdown-row { display: flex; flex-direction: column; gap: .35rem; }
+.breakdown-row__top { display: flex; align-items: center; gap: .6rem; font-size: .85rem; }
+.breakdown-row__name { font-weight: 600; }
+.breakdown-row__value { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; }
+.breakdown-row__share { font-size: .75rem; color: var(--text-muted); width: 46px; text-align: right; }
+
+.insight-list { display: flex; flex-direction: column; gap: .65rem; }
+.insight {
+  display: flex; gap: .65rem; align-items: flex-start;
+  padding: .75rem .85rem; border-radius: var(--radius);
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: .84rem; color: var(--text-soft);
+}
+.insight svg { width: 18px; height: 18px; fill: var(--brand); flex: none; margin-top: .1rem; }
+.insight strong { color: var(--text); }
+
+@media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }

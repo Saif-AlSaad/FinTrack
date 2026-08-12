@@ -1,0 +1,76 @@
+/* ==========================================================================
+   FinTrack — responsive.css
+   Breakpoints: 1280 / 1024 (tablet + sidebar collapse) / 768 / 520
+   ========================================================================== */
+
+@media (max-width: 1280px) {
+  .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-split { grid-template-columns: 1fr; }
+  .reports-split { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); }
+  .sidebar.is-open { transform: translateX(0); }
+  .main-area { margin-left: 0; }
+  .menu-toggle { display: grid; }
+  .grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid--2 { grid-template-columns: 1fr; }
+  .settings-layout { grid-template-columns: 1fr; }
+  .page { padding: 1.25rem; }
+  .topbar { padding: .75rem 1.25rem; }
+}
+
+@media (max-width: 768px) {
+  body { font-size: 14.5px; }
+  .grid--4, .grid--3 { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .topbar__title p { display: none; }
+  .user-chip__name { display: none; }
+  .user-chip { padding: .25rem; }
+  .filters-bar { grid-template-columns: 1fr 1fr; }
+  .hide-sm { display: none !important; }
+  .page { padding: 1rem; }
+  .card { padding: 1.1rem; }
+  .chart-box { height: 260px; }
+
+  /* Table → responsive cards */
+  .data-table thead { display: none; }
+  .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
+  .data-table tr {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .85rem;
+    margin-bottom: .75rem;
+    background: var(--surface-2);
+  }
+  .data-table td {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: .35rem 0; border: none; text-align: right;
+  }
+  .data-table td::before {
+    content: attr(data-label);
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--text-muted); font-weight: 700; text-align: left;
+  }
+  .data-table td[data-label="Transaction"] { border-bottom: 1px dashed var(--border); padding-bottom: .6rem; margin-bottom: .35rem; }
+  .table-actions { justify-content: flex-end; }
+}
+
+@media (max-width: 520px) {
+  .filters-bar { grid-template-columns: 1fr; }
+  .topbar__actions .btn span { display: none; }
+  .topbar__actions .btn { padding: .6rem .7rem; }
+  .stat-card__value { font-size: 1.45rem; }
+  .modal__footer { flex-direction: column-reverse; }
+  .modal__footer .btn { width: 100%; }
+  .toast-stack { right: .75rem; left: .75rem; bottom: .75rem; width: auto; }
+  .segmented { width: 100%; }
+  .segmented label { flex: 1; text-align: center; }
+}
+
+@media print {
+  .sidebar, .topbar__actions, .menu-toggle, .toast-stack, .modal { display: none !important; }
+  .main-area { margin-left: 0; }
+  .card { break-inside: avoid; box-shadow: none; }
+}

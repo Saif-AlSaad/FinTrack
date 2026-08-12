@@ -1,0 +1,96 @@
+/* ==========================================================================
+   FinTrack — settings.css
+   ========================================================================== */
+
+.settings-layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.25rem; align-items: start; }
+
+.settings-section + .settings-section { margin-top: 1.25rem; }
+.settings-section__head { margin-bottom: 1.15rem; }
+.settings-section__head h2 { font-size: 1.02rem; }
+.settings-section__head p { font-size: .82rem; color: var(--text-muted); }
+
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; padding: .95rem 0; border-bottom: 1px solid var(--border);
+}
+.setting-row:last-of-type { border-bottom: none; }
+.setting-row__info h3 { font-size: .9rem; font-weight: 600; }
+.setting-row__info p { font-size: .78rem; color: var(--text-muted); max-width: 46ch; }
+
+.theme-choice { display: flex; gap: .75rem; }
+.theme-option { position: relative; }
+.theme-option input { position: absolute; opacity: 0; }
+.theme-option label {
+  display: block; cursor: pointer;
+  border: 2px solid var(--border); border-radius: var(--radius);
+  padding: .6rem; width: 108px; transition: all var(--transition);
+}
+.theme-option input:checked + label { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.theme-option input:focus-visible + label { outline: 2px solid var(--brand); outline-offset: 2px; }
+.theme-preview { height: 52px; border-radius: 8px; display: flex; overflow: hidden; margin-bottom: .45rem; }
+.theme-preview__side { width: 30%; }
+.theme-preview__main { flex: 1; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.theme-preview__bar { height: 8px; border-radius: 3px; }
+.theme-preview--light .theme-preview__side { background: #e2e8f0; }
+.theme-preview--light .theme-preview__main { background: #f8fafc; }
+.theme-preview--light .theme-preview__bar { background: #cbd5e1; }
+.theme-preview--dark .theme-preview__side { background: #1c2942; }
+.theme-preview--dark .theme-preview__main { background: #0b1120; }
+.theme-preview--dark .theme-preview__bar { background: #33415f; }
+.theme-option span { font-size: .8rem; font-weight: 600; text-align: center; display: block; }
+
+.profile-preview { text-align: center; padding: .5rem 0 1rem; }
+.profile-preview .avatar {
+  width: 92px; height: 92px; font-size: 1.6rem;
+  margin: 0 auto .8rem; cursor: default;
+  box-shadow: var(--shadow-sm);
+  border: 2px solid rgba(255,255,255,.95);
+  background: linear-gradient(135deg, var(--brand), #7c3aed);
+  overflow: hidden;
+}
+.profile-preview .avatar__img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  display: block;
+}
+.profile-preview h3 { font-size: 1.05rem; }
+.profile-preview p { font-size: .82rem; color: var(--text-muted); }
+
+.photo-controls { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: .25rem; }
+.photo-controls .btn--sm { font-size: .78rem; }
+.photo-hint { font-size: .74rem; color: var(--text-muted); margin-top: .75rem; }
+.photo-hint strong { color: var(--text-soft); }
+
+/* Avatar upload drop target */
+.avatar-upload {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.avatar-upload .avatar {
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.avatar-upload .avatar-badge {
+  position: absolute; right: -4px; bottom: -4px;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--brand); color: #fff;
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+}
+.avatar-upload .avatar-badge svg { width: 14px; height: 14px; fill: currentColor; }
+.avatar-upload .btn--sm { margin-top: .9rem; }
+
+.stat-list { display: flex; flex-direction: column; gap: .1rem; margin-top: .5rem; }
+.stat-list__row {
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding: .6rem 0; border-bottom: 1px dashed var(--border); font-size: .85rem;
+}
+.stat-list__row:last-child { border-bottom: none; }
+.stat-list__row span:first-child { color: var(--text-muted); }
+.stat-list__row span:last-child { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.danger-zone { border-color: var(--expense); }
+.danger-zone .settings-section__head h2 { color: var(--expense); }
+.data-actions { display: flex; flex-wrap: wrap; gap: .6rem; }

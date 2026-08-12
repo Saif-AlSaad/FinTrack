@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Create monthly category budgets and monitor your spending progress with FinTrack.">
+  <title>Budgets · FinTrack</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232563eb'/%3E%3Cpath d='M30 70V38l20 18 20-24v38z' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/budgets.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</head>
+<body data-page="budgets">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+      <a class="brand" href="index.html" aria-label="FinTrack home">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 7.9 20.6 6.5l-7.1 7.1-4-4L2 17z"/><path d="M2 20h20v2H2z"/></svg>
+        </span>
+        <span>
+          <span class="brand__name">FinTrack</span><br>
+          <span class="brand__tag">Money Manager</span>
+        </span>
+      </a>
+      <nav id="sidebarNav" aria-label="Main navigation"></nav>
+      <div class="sidebar__footer">
+        <button class="sidebar-footer-link" type="button" data-action="logout">
+          <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          <span>Log out</span>
+        </button>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="main-area">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sidebar">
+          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <div class="topbar__title">
+          <h1>Budgets</h1>
+          <p>Monthly limits for every spending category</p>
+        </div>
+        <div class="topbar__actions">
+          <button class="icon-btn" type="button" data-theme-toggle aria-pressed="false">
+            <svg class="icon-sun" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-5.4-5.4c0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+          </button>
+          <button class="btn btn--primary" type="button" data-action="add-budget">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>New Budget</span>
+          </button>
+          <a class="user-chip" href="settings.html" aria-label="Open settings">
+            <span class="avatar" data-profile-initials aria-hidden="true">FT</span>
+            <span class="user-chip__name" data-profile-name>FinTrack User</span>
+          </a>
+        </div>
+      </header>
+
+      <main class="page" id="main">
+        <section class="card">
+          <div class="card__head">
+            <div>
+              <h2 class="card__title">Budget period</h2>
+              <p class="card__subtitle">Budgets and spending are calculated per calendar month</p>
+            </div>
+            <div class="month-picker">
+              <label class="visually-hidden" for="budgetMonth">Select budget month</label>
+              <input class="input" type="month" id="budgetMonth">
+              <button class="btn btn--ghost btn--sm" type="button" id="thisMonthBtn">This month</button>
+            </div>
+          </div>
+          <div class="budget-overview" id="budgetOverview"></div>
+        </section>
+
+        <section aria-labelledby="alertsHeading">
+          <h2 class="visually-hidden" id="alertsHeading">Budget alerts</h2>
+          <div id="budgetAlerts" class="stack"></div>
+        </section>
+
+        <section aria-labelledby="budgetsHeading">
+          <div class="section-head">
+            <div>
+              <h2 id="budgetsHeading">Category budgets</h2>
+              <p>Progress bars update automatically as transactions change</p>
+            </div>
+            <button class="btn btn--soft btn--sm" type="button" data-action="add-budget">Add category budget</button>
+          </div>
+          <div class="budget-grid" id="budgetGrid"></div>
+          <div id="budgetEmpty"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========================= Add / Edit budget ========================== -->
+  <div class="modal" id="budgetModal" hidden>
+    <div class="modal__dialog modal__dialog--sm" role="dialog" aria-modal="true" aria-labelledby="budgetModalTitle">
+      <form id="budgetForm" novalidate>
+        <div class="modal__header">
+          <div>
+            <h2 class="modal__title" id="budgetModalTitle">Create Budget</h2>
+            <p class="modal__subtitle">Set a monthly spending limit</p>
+          </div>
+          <button class="icon-btn icon-btn--ghost" type="button" data-close-modal aria-label="Close dialog">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+        <div class="modal__body">
+          <input type="hidden" id="budgetId">
+          <div class="form-grid">
+            <div class="field field--full">
+              <label for="budgetCategory">Category *</label>
+              <select class="select" id="budgetCategory" data-autofocus></select>
+              <span class="error-msg" id="errBudgetCategory"></span>
+            </div>
+            <div class="field field--full">
+              <label for="budgetAmount">Monthly limit *</label>
+              <input class="input" type="number" id="budgetAmount" min="1" step="0.01" placeholder="0.00" inputmode="decimal">
+              <span class="error-msg" id="errBudgetAmount"></span>
+            </div>
+            <div class="field field--full">
+              <label for="budgetMonthField">Month *</label>
+              <input class="input" type="month" id="budgetMonthField">
+              <span class="error-msg" id="errBudgetMonth"></span>
+            </div>
+            <div class="field field--full">
+              <label for="budgetNote">Note</label>
+              <input class="input" type="text" id="budgetNote" maxlength="80" placeholder="Optional reminder">
+            </div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--ghost" type="button" data-close-modal>Cancel</button>
+          <button class="btn btn--primary" type="submit" id="budgetSubmitBtn">Save Budget</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/budgets.js"></script>
+</body>
+</html>
