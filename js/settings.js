@@ -238,7 +238,6 @@
     });
 
     FT.$('#exportBtn').addEventListener('click', exportBackup);
-    FT.$('#sidebarExport').addEventListener('click', exportBackup);
     FT.$('#importBtn').addEventListener('click', () => els.importFile.click());
     els.importFile.addEventListener('change', handleImport);
     FT.$('#sampleBtn').addEventListener('click', handleSampleData);

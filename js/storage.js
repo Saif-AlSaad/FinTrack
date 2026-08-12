@@ -302,8 +302,8 @@ const FTStorage = (() => {
   }
 
   function seedSampleData(force = false) {
-    const alreadySeeded = readRaw(KEYS.seeded) === 'true';
-    if (!force && alreadySeeded) return false;
+    const seeded = readRaw(KEYS.seeded);
+    if (!force && seeded !== null) return false;
 
     write(KEYS.transactions, buildSampleTransactions());
     write(KEYS.budgets, buildSampleBudgets());
@@ -342,7 +342,7 @@ const FTStorage = (() => {
   function clearAllData(keepSettings = true) {
     removeRaw(KEYS.transactions);
     removeRaw(KEYS.budgets);
-    removeRaw(KEYS.seeded);
+    writeRaw(KEYS.seeded, 'false');
     if (!keepSettings) removeRaw(KEYS.settings);
     emit('clear');
   }
