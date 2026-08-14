@@ -129,6 +129,53 @@ const FTStorage = (() => {
     return getUsers().find(u => u.email === email) || null;
   }
 
+  function findUserByEmail(email) {
+    const users = getUsers();
+    return users.find(u => u.email === String(email).toLowerCase()) || null;
+  }
+
+  /* -------------------------------------------------------- password reset */
+  const RESET_KEY = 'fintrack:reset';
+
+  /**
+   * Starts a password reset for the given email.
+   * Generates a 6-digit code stored with a 10-minute expiry.
+   * Since there is no email service in this local demo, the code is returned
+   * so the UI can display it; in production it would be emailed.
+   */
+  function requestPasswordReset(email) {
+    const user = findUserByEmail(email);
+    if (!user) throw new Error('No account found with this email address.');
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    writeRaw(RESET_KEY, JSON.stringify({
+      email: user.email,
+      code,
+      expiresAt: Date.now() + 10 * 60 * 1000
+    }));
+    return code;
+  }
+
+  function resetPassword(email, code, newPassword) {
+    const raw = readRaw(RESET_KEY);
+    if (!raw) throw new Error('No password reset was requested. Please try again.');
+    let record;
+    try { record = JSON.parse(raw); }
+    catch (err) { removeRaw(RESET_KEY); throw new Error('Reset code is invalid or expired.'); }
+    if (record.email !== String(email).toLowerCase()) throw new Error('Reset code does not match this email.');
+    if (Date.now() > record.expiresAt) {
+      removeRaw(RESET_KEY);
+      throw new Error('Reset code has expired. Please request a new one.');
+    }
+    if (String(code) !== String(record.code)) throw new Error('Incorrect reset code.');
+    const users = getUsers();
+    const user = users.find(u => u.email === record.email);
+    if (!user) { removeRaw(RESET_KEY); throw new Error('Account not found.'); }
+    user.password = newPassword;
+    saveUsers(users);
+    removeRaw(RESET_KEY);
+    return user;
+  }
+
   /* -------------------------------------------------------- transactions */
   const normalizeTransaction = (tx) => ({
     id: tx.id || uid('tx'),
@@ -349,7 +396,8 @@ const FTStorage = (() => {
 
   return {
     KEYS, DEFAULT_SETTINGS, uid,
-    registerUser, loginUser, logoutUser, getCurrentUser,
+    registerUser, loginUser, logoutUser, getCurrentUser, findUserByEmail,
+    requestPasswordReset, resetPassword,
     getTransactions, saveTransactions, addTransaction, updateTransaction, deleteTransaction, getTransaction,
     getBudgets, saveBudgets, addBudget, updateBudget, deleteBudget, budgetExists,
     getSettings, saveSettings, seedSampleData, exportData, importData, clearAllData

@@ -45,6 +45,52 @@
     .auth-footer a { color: var(--brand); font-weight: 600; cursor: pointer; }
     .auth-footer a:hover { text-decoration: underline; }
 
+    /* Forgot password */
+    .forgot-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+    .link-btn {
+      background: none; border: none; padding: 0;
+      font-size: .8rem; font-weight: 600; color: var(--brand); cursor: pointer;
+    }
+    .link-btn:hover { text-decoration: underline; }
+    .auth-link-btn {
+      background: none; border: none; padding: .35rem 0; margin-top: .9rem;
+      font-size: .8rem; font-weight: 600; color: var(--text-muted); cursor: pointer;
+    }
+    .auth-link-btn:hover { color: var(--brand); }
+    .reset-code-demo {
+      background: var(--brand-soft); border: 1px dashed var(--brand);
+      color: var(--brand); border-radius: var(--radius-sm);
+      padding: .7rem .9rem; font-size: .8rem; margin-bottom: .95rem;
+    }
+    .reset-code-demo strong { font-size: 1.15rem; letter-spacing: .08em; }
+
+    /* Email live-validation status (sign-up only) */
+    .email-status {
+      font-size: .78rem; font-weight: 500;
+      display: flex; align-items: center; gap: .35rem;
+      min-height: 1.1rem;
+    }
+    .email-status[data-state="checking"] { color: var(--text-muted); }
+    .email-status[data-state="valid"] { color: var(--income); }
+    .email-status[data-state="invalid"] { color: var(--expense); }
+
+    /* Password visibility toggle (hold to reveal) */
+    .password-wrap { position: relative; }
+    .password-wrap .input { padding-right: 2.7rem; }
+    .password-toggle {
+      position: absolute; right: .4rem; top: 50%; transform: translateY(-50%);
+      width: 30px; height: 30px; display: grid; place-items: center;
+      border: none; background: transparent; color: var(--text-muted);
+      border-radius: 6px; cursor: pointer;
+      transition: color var(--transition), background var(--transition);
+    }
+    .password-toggle:hover { color: var(--text); background: var(--surface-3); }
+    .password-toggle:active { color: var(--brand); }
+    .password-toggle svg { width: 18px; height: 18px; fill: currentColor; }
+    .password-toggle .icon-eye-off { display: none; }
+    .password-toggle.is-visible .icon-eye { display: none; }
+    .password-toggle.is-visible .icon-eye-off { display: block; }
+
     /* Switch transitions */
     [data-view="register"] .view-login,
     [data-view="login"] .view-register { display: none; }
@@ -83,12 +129,34 @@
           <label for="email">Email Address</label>
           <input type="email" id="email" class="input" placeholder="name@example.com" autocomplete="email">
           <span class="error-msg" id="errEmail"></span>
+          <span class="email-status" id="emailStatus" hidden></span>
         </div>
 
         <div class="field">
-          <label for="password">Password</label>
-          <input type="password" id="password" class="input" placeholder="••••••••" autocomplete="current-password">
+          <div class="forgot-row">
+            <label for="password">Password</label>
+            <button type="button" class="link-btn view-login" id="forgotLink">Forgot password?</button>
+          </div>
+          <div class="password-wrap">
+            <input type="password" id="password" class="input" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false" title="Hold to show password">
+              <svg class="icon-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              <svg class="icon-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+            </button>
+          </div>
           <span class="error-msg" id="errPassword"></span>
+        </div>
+
+        <div class="field view-register">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="password-wrap">
+            <input type="password" id="confirmPassword" class="input" placeholder="Re-enter your password" autocomplete="new-password">
+            <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false" title="Hold to show password">
+              <svg class="icon-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              <svg class="icon-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+            </button>
+          </div>
+          <span class="error-msg" id="errConfirmPassword"></span>
         </div>
 
         <button type="submit" class="btn btn--primary btn--block view-login">Sign In</button>
@@ -100,6 +168,57 @@
       </div>
       <div class="auth-footer view-register">
         Already have an account? <a id="toggleToLogin">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="forgotModal" hidden>
+    <div class="modal__dialog modal__dialog--sm" role="dialog" aria-modal="true" aria-labelledby="forgotModalTitle">
+      <div class="modal__header">
+        <div>
+          <h2 class="modal__title" id="forgotModalTitle">Forgot Password</h2>
+          <p class="modal__subtitle">We'll help you get back into your account.</p>
+        </div>
+        <button type="button" class="btn-icon" data-close-modal aria-label="Close">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <form id="forgotStepForm" class="auth-form" novalidate>
+          <div class="field">
+            <label for="forgotEmail">Email Address</label>
+            <input type="email" id="forgotEmail" class="input" placeholder="name@example.com" autocomplete="email" data-autofocus>
+            <span class="error-msg" id="errForgotEmail"></span>
+          </div>
+          <button type="submit" class="btn btn--primary btn--block">Send Reset Code</button>
+        </form>
+
+        <form id="resetStepForm" class="auth-form" hidden novalidate>
+          <div class="reset-code-demo" id="resetCodeDemo" hidden>
+            This demo has no email service, so here is your reset code:<br>
+            <strong id="resetCodeValue"></strong><br>
+            <small>Valid for 10 minutes.</small>
+          </div>
+          <div class="field">
+            <label for="resetCode">Reset Code</label>
+            <input type="text" id="resetCode" class="input" inputmode="numeric" placeholder="6-digit code" maxlength="6" autocomplete="one-time-code">
+            <span class="error-msg" id="errResetCode"></span>
+          </div>
+          <div class="field">
+            <label for="resetNewPassword">New Password</label>
+<div class="password-wrap">
+            <input type="password" id="resetNewPassword" class="input" placeholder="At least 6 characters" autocomplete="new-password">
+            <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false" title="Hold to show password">
+              <svg class="icon-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              <svg class="icon-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+            </button>
+          </div>
+          <span class="error-msg" id="errResetPassword"></span>
+        </div>
+          <button type="submit" class="btn btn--primary btn--block">Reset Password</button>
+        </form>
+
+        <button type="button" class="auth-link-btn" id="backToForgot" hidden>← Back to email step</button>
       </div>
     </div>
   </div>
