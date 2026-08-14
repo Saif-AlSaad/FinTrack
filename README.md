@@ -234,12 +234,12 @@ _Add your own captures to `docs/screenshots/` and they will render here:_
 
 ## 👤 Author
 
-**Your Name**
-Frontend Developer
+**Saif Al Saad**<br>
+🎓 BSc in **Software Engineering**<br>
+🔍 Major in **Software Quality Assurance & Testing**<br>
+🏫 **Daffodil International University**<br>
 
-- Portfolio: [your-portfolio.com](https://your-portfolio.com)
-- GitHub: [@your-username](https://github.com/your-username)
-- LinkedIn: [/in/your-profile](https://linkedin.com/in/your-profile)
+- GitHub: https://github.com/Saif-AlSaad
 
 ---
 
