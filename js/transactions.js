@@ -18,6 +18,8 @@
     category: 'all',
     month: '',
     sort: 'newest',
+    page: 1,
+    pageSize: 25,
     editingId: null
   };
 
@@ -79,12 +81,52 @@
       </span>`).join('');
   }
 
+  function renderPagination(totalItems) {
+    if (!els.pagination) return;
+    const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+    if (state.page > totalPages) state.page = totalPages;
+    if (state.page < 1) state.page = 1;
+
+    if (totalItems <= 0) {
+      els.pagination.hidden = true;
+      return;
+    }
+    els.pagination.hidden = false;
+
+    const start = (state.page - 1) * state.pageSize + 1;
+    const end = Math.min(state.page * state.pageSize, totalItems);
+    els.paginationInfo.textContent = `Showing ${start}–${end} of ${totalItems} transaction${totalItems === 1 ? '' : 's'}`;
+
+    els.prevPageBtn.disabled = state.page <= 1;
+    els.nextPageBtn.disabled = state.page >= totalPages;
+
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (state.page <= 3) {
+        pages = [1, 2, 3, 4, totalPages];
+      } else if (state.page >= totalPages - 2) {
+        pages = [1, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+      } else {
+        pages = [1, state.page - 1, state.page, state.page + 1, totalPages];
+      }
+    }
+
+    els.pageNumbers.innerHTML = pages.map((p, idx) => {
+      const prev = pages[idx - 1];
+      const ellipsis = prev && p - prev > 1 ? '<span class="pagination-ellipsis" aria-hidden="true">…</span>' : '';
+      return `${ellipsis}<button type="button" class="btn btn--sm page-btn ${p === state.page ? 'is-active' : 'btn--ghost'}" data-page-num="${p}" aria-label="Page ${p}" ${p === state.page ? 'aria-current="page"' : ''}>${p}</button>`;
+    }).join('');
+  }
+
   function renderTable() {
     const list = getVisibleTransactions();
     const total = FTStorage.getTransactions().length;
 
     renderTotals(list);
     renderPills();
+    renderPagination(list.length);
     els.count.textContent = list.length === total
       ? `Showing all ${total} transaction${total === 1 ? '' : 's'}`
       : `Showing ${list.length} of ${total} transactions`;
@@ -92,6 +134,7 @@
     if (!list.length) {
       els.tbody.innerHTML = '';
       els.table.hidden = true;
+      if (els.pagination) els.pagination.hidden = true;
       els.empty.innerHTML = total === 0
         ? FT.emptyState({
           title: 'No transactions yet',
@@ -111,7 +154,9 @@
 
     els.table.hidden = false;
     els.empty.innerHTML = '';
-    els.tbody.innerHTML = list.map((tx) => {
+    const startIndex = (state.page - 1) * state.pageSize;
+    const pageItems = list.slice(startIndex, startIndex + state.pageSize);
+    els.tbody.innerHTML = pageItems.map((tx) => {
       const color = FT.categoryColor(tx.category);
       return `
       <tr data-id="${tx.id}">
@@ -276,7 +321,12 @@
   /* ------------------------------------------------------------- wiring */
 
   function resetFilters() {
-    Object.assign(state, { search: '', type: 'all', category: 'all', month: '', sort: 'newest' });
+    state.search = '';
+    state.type = 'all';
+    state.category = 'all';
+    state.month = '';
+    state.sort = 'newest';
+    state.page = 1;
     els.search.value = '';
     els.typeFilter.value = 'all';
     els.categoryFilter.value = 'all';
@@ -299,6 +349,12 @@
       table: FT.$('#txTable'),
       tbody: FT.$('#txTableBody'),
       empty: FT.$('#txEmpty'),
+      pagination: FT.$('#txPagination'),
+      paginationInfo: FT.$('#paginationInfo'),
+      pageSizeSelect: FT.$('#pageSizeSelect'),
+      prevPageBtn: FT.$('#prevPageBtn'),
+      nextPageBtn: FT.$('#nextPageBtn'),
+      pageNumbers: FT.$('#pageNumbers'),
       search: FT.$('#searchInput'),
       typeFilter: FT.$('#typeFilter'),
       categoryFilter: FT.$('#categoryFilter'),
@@ -320,6 +376,26 @@
 
     buildCategoryFilter();
     FT.fillCategoryOptions(els.category, 'expense');
+
+    // Parse URL parameters for drill-downs
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('category')) {
+      state.category = params.get('category');
+      els.categoryFilter.value = state.category;
+    }
+    if (params.get('month')) {
+      state.month = params.get('month');
+      els.monthFilter.value = state.month;
+    }
+    if (params.get('type')) {
+      state.type = params.get('type');
+      els.typeFilter.value = state.type;
+    }
+    if (params.get('search')) {
+      state.search = params.get('search');
+      els.search.value = state.search;
+    }
+
     renderTable();
 
     // Filters
@@ -327,13 +403,48 @@
     els.search.addEventListener('input', (e) => {
       clearTimeout(searchTimer);
       const value = e.target.value;
-      searchTimer = setTimeout(() => { state.search = value; renderTable(); }, 180);
+      searchTimer = setTimeout(() => { state.search = value; state.page = 1; renderTable(); }, 180);
     });
-    els.typeFilter.addEventListener('change', (e) => { state.type = e.target.value; renderTable(); });
-    els.categoryFilter.addEventListener('change', (e) => { state.category = e.target.value; renderTable(); });
-    els.monthFilter.addEventListener('change', (e) => { state.month = e.target.value; renderTable(); });
-    els.sortSelect.addEventListener('change', (e) => { state.sort = e.target.value; renderTable(); });
+    els.typeFilter.addEventListener('change', (e) => { state.type = e.target.value; state.page = 1; renderTable(); });
+    els.categoryFilter.addEventListener('change', (e) => { state.category = e.target.value; state.page = 1; renderTable(); });
+    els.monthFilter.addEventListener('change', (e) => { state.month = e.target.value; state.page = 1; renderTable(); });
+    els.sortSelect.addEventListener('change', (e) => { state.sort = e.target.value; state.page = 1; renderTable(); });
     FT.$('#resetFilters').addEventListener('click', resetFilters);
+
+    // Pagination events
+    if (els.pageSizeSelect) {
+      els.pageSizeSelect.addEventListener('change', (e) => {
+        state.pageSize = Number(e.target.value) || 25;
+        state.page = 1;
+        renderTable();
+      });
+    }
+    if (els.prevPageBtn) {
+      els.prevPageBtn.addEventListener('click', () => {
+        if (state.page > 1) {
+          state.page -= 1;
+          renderTable();
+          els.table.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    }
+    if (els.nextPageBtn) {
+      els.nextPageBtn.addEventListener('click', () => {
+        state.page += 1;
+        renderTable();
+        els.table.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+    if (els.pageNumbers) {
+      els.pageNumbers.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-page-num]');
+        if (btn) {
+          state.page = Number(btn.dataset.pageNum);
+          renderTable();
+          els.table.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    }
 
     // Category options follow the selected type inside the form
     FT.$$('input[name="txType"]').forEach((radio) =>
@@ -358,6 +469,7 @@
         if (key === 'type') { state.type = 'all'; els.typeFilter.value = 'all'; }
         if (key === 'category') { state.category = 'all'; els.categoryFilter.value = 'all'; }
         if (key === 'month') { state.month = ''; els.monthFilter.value = ''; }
+        state.page = 1;
         renderTable();
         return;
       }
@@ -372,7 +484,6 @@
     });
 
     // Deep link: transactions.html?action=new opens the form immediately
-    const params = new URLSearchParams(window.location.search);
     if (params.get('action') === 'new') {
       openForm();
       window.history.replaceState({}, '', 'transactions.html');

@@ -12,6 +12,15 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/transactions.css">
   <link rel="stylesheet" href="css/responsive.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <script>
+    if (!localStorage.getItem('fintrack:session')) {
+      window.location.replace('auth.html');
+    }
+  </script>
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
 </head>
@@ -136,6 +145,30 @@
               </thead>
               <tbody id="txTableBody"></tbody>
             </table>
+          </div>
+          <div class="table-pagination" id="txPagination" hidden>
+            <p class="pagination-info" id="paginationInfo">Showing 1–25 of 120</p>
+            <div class="pagination-controls">
+              <div class="pagination-size">
+                <label for="pageSizeSelect">Per page:</label>
+                <select id="pageSizeSelect" class="select select--sm">
+                  <option value="10">10</option>
+                  <option value="25" selected>25</option>
+                  <option value="50">50</option>
+                </select>
+              </div>
+              <div class="pagination-nav">
+                <button type="button" class="btn btn--ghost btn--sm" id="prevPageBtn" aria-label="Previous page">
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  <span>Prev</span>
+                </button>
+                <div class="page-numbers" id="pageNumbers"></div>
+                <button type="button" class="btn btn--ghost btn--sm" id="nextPageBtn" aria-label="Next page">
+                  <span>Next</span>
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
           <div id="txEmpty"></div>
         </section>

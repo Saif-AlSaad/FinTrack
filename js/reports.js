@@ -73,6 +73,16 @@
       },
       options: {
         interaction: { mode: 'index', intersect: false },
+        onClick: (evt, elements) => {
+          if (elements.length > 0) {
+            const idx = elements[0].index;
+            if (series[idx]) window.location.href = `transactions.html?month=${encodeURIComponent(series[idx].key)}`;
+          }
+        },
+        onHover: (event, chartElement) => {
+          const target = event.native ? event.native.target : event.chart?.canvas;
+          if (target) target.style.cursor = chartElement.length ? 'pointer' : 'default';
+        },
         plugins: {
           legend: { position: 'top', align: 'end' },
           tooltip: { callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${FT.formatCurrency(ctx.parsed.y)}` } }
@@ -107,6 +117,16 @@
       },
       options: {
         cutout: '62%',
+        onClick: (evt, elements) => {
+          if (elements.length > 0) {
+            const idx = elements[0].index;
+            if (data[idx]) window.location.href = `transactions.html?category=${encodeURIComponent(data[idx].category)}`;
+          }
+        },
+        onHover: (event, chartElement) => {
+          const target = event.native ? event.native.target : event.chart?.canvas;
+          if (target) target.style.cursor = chartElement.length ? 'pointer' : 'default';
+        },
         plugins: {
           legend: { position: 'bottom' },
           tooltip: {
@@ -136,6 +156,16 @@
         }]
       },
       options: {
+        onClick: (evt, elements) => {
+          if (elements.length > 0) {
+            const idx = elements[0].index;
+            if (series[idx]) window.location.href = `transactions.html?month=${encodeURIComponent(series[idx].key)}`;
+          }
+        },
+        onHover: (event, chartElement) => {
+          const target = event.native ? event.native.target : event.chart?.canvas;
+          if (target) target.style.cursor = chartElement.length ? 'pointer' : 'default';
+        },
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: (ctx) => ` ${FT.formatCurrency(ctx.parsed.y)}` } }
@@ -167,7 +197,7 @@
       const share = (d.total / total) * 100;
       const color = FT.categoryColor(d.category);
       return `
-      <div class="breakdown-row">
+      <a class="breakdown-row" href="transactions.html?category=${encodeURIComponent(d.category)}" title="Filter transactions by ${d.category}">
         <div class="breakdown-row__top">
           <span class="legend-dot" style="background:${color}" aria-hidden="true"></span>
           <span class="breakdown-row__name">${d.category}</span>
@@ -175,7 +205,7 @@
           <span class="breakdown-row__share">${share.toFixed(1)}%</span>
         </div>
         <div class="progress"><div class="progress__bar" style="width:${share}%;background:${color}"></div></div>
-      </div>`;
+      </a>`;
     }).join('');
   }
 

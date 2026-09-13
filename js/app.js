@@ -635,6 +635,189 @@ const FT = (() => {
       .join('')}`;
   }
 
+  /* ------------------------------------------------------------ PWA & Shortcuts */
+
+  function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => {
+          console.warn('[FinTrack] ServiceWorker registration failed:', err);
+        });
+      });
+    }
+  }
+
+  function handleQuickAdd() {
+    if (document.body.dataset.page === 'transactions') {
+      const addBtn = document.querySelector('[data-action="add-transaction"]');
+      if (addBtn) { addBtn.click(); return; }
+    }
+    window.location.href = 'transactions.html?action=new';
+  }
+
+  function showShortcutsModal() {
+    let modal = $('#ftShortcutsModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'ftShortcutsModal';
+      modal.hidden = true;
+      modal.innerHTML = `
+        <div class="modal__dialog modal__dialog--sm" role="dialog" aria-modal="true" aria-labelledby="ftShortcutsTitle">
+          <div class="modal__header">
+            <div>
+              <h2 class="modal__title" id="ftShortcutsTitle">Keyboard Shortcuts</h2>
+              <p class="modal__subtitle">Speed up your workflow with hotkeys</p>
+            </div>
+            <button type="button" class="btn-icon" data-close-modal aria-label="Close">
+              <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+          </div>
+          <div class="modal__body">
+            <div class="shortcuts-grid">
+              <div class="shortcut-row"><span>New Transaction</span><kbd class="kbd">N</kbd></div>
+              <div class="shortcut-row"><span>Search Transactions</span><kbd class="kbd">/</kbd></div>
+              <div class="shortcut-row"><span>Toggle Light / Dark Mode</span><kbd class="kbd">T</kbd></div>
+              <div class="shortcut-row"><span>Go to Dashboard</span><kbd class="kbd">D</kbd></div>
+              <div class="shortcut-row"><span>Go to Transactions</span><kbd class="kbd">X</kbd></div>
+              <div class="shortcut-row"><span>Go to Budgets</span><kbd class="kbd">B</kbd></div>
+              <div class="shortcut-row"><span>Go to Reports</span><kbd class="kbd">R</kbd></div>
+              <div class="shortcut-row"><span>Go to Settings</span><kbd class="kbd">S</kbd></div>
+              <div class="shortcut-row"><span>Close Modal / Dialog</span><kbd class="kbd">Esc</kbd></div>
+              <div class="shortcut-row"><span>Show Shortcuts Cheatsheet</span><kbd class="kbd">?</kbd></div>
+            </div>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+    if (modal.hidden) openModal(modal);
+    else closeModal(modal);
+  }
+
+  function initGlobalFAB() {
+    if (document.body.dataset.view === 'login' || document.body.dataset.view === 'register') return;
+    if ($('#ftGlobalFab')) return;
+
+    const fabWrap = document.createElement('div');
+    fabWrap.className = 'global-fab-wrap';
+    fabWrap.id = 'ftGlobalFab';
+    fabWrap.innerHTML = `
+      <div class="global-fab__menu" id="ftFabMenu">
+        <button type="button" class="global-fab__action" data-fab-action="shortcuts" title="Keyboard Shortcuts (?)">
+          <span class="global-fab__action-label">Shortcuts <kbd class="kbd-badge">?</kbd></span>
+          <span class="global-fab__action-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+          </span>
+        </button>
+        <button type="button" class="global-fab__action" data-fab-action="add" title="Add Transaction (N)">
+          <span class="global-fab__action-label">New Transaction <kbd class="kbd-badge">N</kbd></span>
+          <span class="global-fab__action-icon">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </span>
+        </button>
+      </div>
+      <button type="button" class="global-fab__btn" id="ftFabMainBtn" aria-label="Quick Actions" title="Quick Actions">
+        <svg class="icon-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        <svg class="icon-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>`;
+    document.body.appendChild(fabWrap);
+
+    const mainBtn = $('#ftFabMainBtn', fabWrap);
+    mainBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fabWrap.classList.toggle('is-open');
+    });
+
+    fabWrap.querySelector('[data-fab-action="add"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      fabWrap.classList.remove('is-open');
+      handleQuickAdd();
+    });
+
+    fabWrap.querySelector('[data-fab-action="shortcuts"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      fabWrap.classList.remove('is-open');
+      showShortcutsModal();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!fabWrap.contains(e.target)) fabWrap.classList.remove('is-open');
+    });
+  }
+
+  function initKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      const target = e.target;
+      const isInput = target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable
+      );
+
+      if (e.key === 'Escape') {
+        const fab = $('#ftGlobalFab');
+        if (fab && fab.classList.contains('is-open')) fab.classList.remove('is-open');
+        return;
+      }
+
+      if (isInput) return; // Don't trigger shortcuts while typing
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      switch (e.key) {
+        case '?':
+          e.preventDefault();
+          showShortcutsModal();
+          break;
+        case 'n':
+        case 'N':
+          e.preventDefault();
+          handleQuickAdd();
+          break;
+        case '/':
+          e.preventDefault();
+          const searchInput = $('#searchInput');
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          } else {
+            window.location.href = 'transactions.html';
+          }
+          break;
+        case 't':
+        case 'T':
+          e.preventDefault();
+          toggleTheme();
+          break;
+        case 'd':
+        case 'D':
+          e.preventDefault();
+          if (document.body.dataset.page !== 'dashboard') window.location.href = 'index.html';
+          break;
+        case 'x':
+        case 'X':
+          e.preventDefault();
+          if (document.body.dataset.page !== 'transactions') window.location.href = 'transactions.html';
+          break;
+        case 'b':
+        case 'B':
+          e.preventDefault();
+          if (document.body.dataset.page !== 'budgets') window.location.href = 'budgets.html';
+          break;
+        case 'r':
+        case 'R':
+          e.preventDefault();
+          if (document.body.dataset.page !== 'reports') window.location.href = 'reports.html';
+          break;
+        case 's':
+        case 'S':
+          e.preventDefault();
+          if (document.body.dataset.page !== 'settings') window.location.href = 'settings.html';
+          break;
+      }
+    });
+  }
+
   /* ------------------------------------------------------------ bootstrap */
 
   function checkAuth() {
@@ -656,6 +839,7 @@ const FT = (() => {
   function init() {
     if (!checkAuth()) return; // Stop execution if redirecting
     
+    registerServiceWorker();
     FTStorage.seedSampleData();          // demo data on first visit only
     const settings = getSettings();
     applyTheme(settings.theme);
@@ -664,6 +848,8 @@ const FT = (() => {
     initModalBehaviour();
     renderProfile();
     syncThemeButtons();
+    initGlobalFAB();
+    initKeyboardShortcuts();
 
     // Wire up global logout buttons if present
     $$('[data-action="logout"]').forEach(btn => btn.addEventListener('click', handleLogout));
@@ -690,7 +876,8 @@ const FT = (() => {
     applyTheme, toggleTheme, currentTheme,
     toast, confirmAction, openModal, closeModal,
     chartTheme, renderChart, showChartEmpty, restoreChartCanvas, currencyTick, emptyState,
-    getInitials, compressImage, renderProfile, handleLogout
+    getInitials, compressImage, renderProfile, handleLogout,
+    showShortcutsModal, handleQuickAdd
   };
 })();
 

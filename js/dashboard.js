@@ -96,6 +96,16 @@
       options: {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
+        onClick: (evt, elements) => {
+          if (elements.length > 0) {
+            const idx = elements[0].index;
+            if (series[idx]) window.location.href = `transactions.html?month=${encodeURIComponent(series[idx].key)}`;
+          }
+        },
+        onHover: (event, chartElement) => {
+          const target = event.native ? event.native.target : event.chart?.canvas;
+          if (target) target.style.cursor = chartElement.length ? 'pointer' : 'default';
+        },
         plugins: {
           legend: { position: 'top', align: 'end' },
           tooltip: { callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${FT.formatCurrency(ctx.parsed.y)}` } }
@@ -138,6 +148,16 @@
       },
       options: {
         cutout: '66%',
+        onClick: (evt, elements) => {
+          if (elements.length > 0) {
+            const idx = elements[0].index;
+            if (data[idx]) window.location.href = `transactions.html?category=${encodeURIComponent(data[idx].category)}`;
+          }
+        },
+        onHover: (event, chartElement) => {
+          const target = event.native ? event.native.target : event.chart?.canvas;
+          if (target) target.style.cursor = chartElement.length ? 'pointer' : 'default';
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -151,10 +171,10 @@
 
     if (legend) {
       legend.innerHTML = data.map((d) => `
-        <span class="legend-item">
+        <a class="legend-item" href="transactions.html?category=${encodeURIComponent(d.category)}" title="Filter by ${d.category}">
           <span class="legend-dot" style="background:${FT.categoryColor(d.category)}"></span>
           ${d.category} · <strong>${((d.total / total) * 100).toFixed(0)}%</strong>
-        </span>`).join('');
+        </a>`).join('');
     }
   }
 
@@ -187,6 +207,16 @@
         }]
       },
       options: {
+        onClick: (evt, elements) => {
+          if (elements.length > 0) {
+            const idx = elements[0].index;
+            if (series[idx]) window.location.href = `transactions.html?month=${encodeURIComponent(series[idx].key)}`;
+          }
+        },
+        onHover: (event, chartElement) => {
+          const target = event.native ? event.native.target : event.chart?.canvas;
+          if (target) target.style.cursor = chartElement.length ? 'pointer' : 'default';
+        },
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: (ctx) => ` Spent: ${FT.formatCurrency(ctx.parsed.y)}` } }

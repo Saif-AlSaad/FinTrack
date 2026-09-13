@@ -576,3 +576,166 @@ h1, h2, h3, h4 { line-height: 1.25; font-weight: 700; letter-spacing: -.015em; }
     scroll-behavior: auto !important;
   }
 }
+
+/* ------------------------------------------------ 17. Global FAB & Shortcuts */
+.global-fab-wrap {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .65rem;
+}
+
+.global-fab__btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  cursor: pointer;
+  border: none;
+  transition: transform var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.global-fab__btn:hover {
+  transform: scale(1.06);
+  background: var(--accent-strong);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.55);
+}
+
+.global-fab__btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: transform var(--transition);
+}
+
+.global-fab__btn .icon-close { display: none; }
+.global-fab-wrap.is-open .global-fab__btn .icon-plus { display: none; }
+.global-fab-wrap.is-open .global-fab__btn .icon-close { display: block; }
+.global-fab-wrap.is-open .global-fab__btn {
+  background: var(--text);
+  color: var(--surface);
+  transform: rotate(90deg);
+}
+
+.global-fab__menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .5rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.global-fab-wrap.is-open .global-fab__menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.global-fab__action {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.global-fab__action-label {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: .35rem .65rem;
+  border-radius: var(--radius-sm);
+  font-size: .8rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.global-fab__action:hover .global-fab__action-label {
+  transform: translateX(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.global-fab__action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.global-fab__action-icon svg { width: 18px; height: 18px; fill: currentColor; }
+.global-fab__action:hover .global-fab__action-icon {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+/* Keyboard keys */
+.kbd, .kbd-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: .7rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: .2rem .4rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.15);
+}
+
+.kbd-badge {
+  font-size: .65rem;
+  padding: .15rem .35rem;
+  background: var(--surface-3);
+}
+
+/* Shortcuts cheatsheet modal */
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: .6rem .9rem;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .5rem .75rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: .85rem;
+  color: var(--text);
+}
+
+/* Clickable chart cursor */
+canvas[role="img"], .legend-item, .breakdown-row {
+  cursor: pointer;
+}
+
