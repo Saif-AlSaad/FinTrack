@@ -118,11 +118,11 @@
           ? `<div class="budget-alert budget-alert--warning"><svg viewBox="0 0 24 24"><path d="${ICONS.warn}"/></svg><span>Only ${FT.formatCurrency(b.remaining)} left in this budget.</span></div>`
           : '';
       return `
-      <article class="card card--hover budget-card">
+      <article class="card card--hover budget-card" style="--cat-accent: ${color};">
         <div class="budget-card__head">
           <span class="cat-icon-wrap" style="background:${color}1f;color:${color}" aria-hidden="true">${FT.categoryIcon(b.category)}</span>
-          <div>
-            <p class="budget-card__title">${b.category}</p>
+          <div class="budget-card__info">
+            <h3 class="budget-card__title">${b.category}</h3>
             <p class="budget-card__month">${FT.monthLabel(b.month, false)}${b.note ? ` · ${FT.escapeHtml(b.note)}` : ''}</p>
           </div>
           <div class="budget-card__actions">
@@ -131,18 +131,32 @@
           </div>
         </div>
 
-        <div class="budget-card__numbers">
-          <p class="budget-card__spent">${FT.formatCurrency(b.spent)}</p>
-          <p class="budget-card__limit">of ${FT.formatCurrency(b.amount)}</p>
+        <div class="budget-card__stats">
+          <div class="budget-stat">
+            <span class="budget-stat__label">Spent</span>
+            <span class="budget-stat__spent budget-stat__spent--${b.status}">${FT.formatCurrency(b.spent)}</span>
+          </div>
+          <div class="budget-stat budget-stat--right">
+            <span class="budget-stat__label">Budget Limit</span>
+            <span class="budget-stat__limit">${FT.formatCurrency(b.amount)}</span>
+          </div>
         </div>
 
-        <div class="progress" role="progressbar" aria-valuenow="${b.percent.toFixed(0)}" aria-valuemin="0" aria-valuemax="100" aria-label="${b.category} budget progress">
-          <div class="progress__bar progress__bar--${b.status}" style="width:${b.clamped}%"></div>
+        <div class="budget-card__bar-wrap">
+          <div class="progress" role="progressbar" aria-valuenow="${b.percent.toFixed(0)}" aria-valuemin="0" aria-valuemax="100" aria-label="${b.category} budget progress">
+            <div class="progress__bar progress__bar--${b.status}" style="width:${b.clamped}%"></div>
+          </div>
         </div>
 
         <div class="budget-card__footer">
           <span class="status-pill status-pill--${b.status}">${b.statusLabel}</span>
-          <span class="small muted">${b.percent.toFixed(0)}% used · ${b.remaining >= 0 ? `${FT.formatCurrency(b.remaining)} remaining` : `${FT.formatCurrency(Math.abs(b.remaining))} over`}</span>
+          <div class="budget-card__meta-right">
+            <span class="budget-pct">${b.percent.toFixed(0)}% used</span>
+            <span class="budget-sep">·</span>
+            <span class="budget-rem-amt ${b.remaining < 0 ? 'budget-rem-amt--over' : ''}">
+              ${b.remaining >= 0 ? `${FT.formatCurrency(b.remaining)} left` : `${FT.formatCurrency(Math.abs(b.remaining))} over`}
+            </span>
+          </div>
         </div>
         ${alert}
       </article>`;

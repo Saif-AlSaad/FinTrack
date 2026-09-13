@@ -4,7 +4,7 @@
    Uses Network-First for local HTML/CSS/JS so new releases show instantly.
    ========================================================================== */
 
-const CACHE_NAME = 'fintrack-v2.7';
+const CACHE_NAME = 'fintrack-v2.8';
 
 const STATIC_ASSETS = [
   './',
