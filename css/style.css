@@ -251,29 +251,35 @@ h1, h2, h3, h4 {
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 1px 2px rgba(0, 0, 0, 0.04);
   transition: 
-    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
-    color 160ms ease,
-    border-color 160ms ease,
-    background 160ms ease;
+    transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 240ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
   cursor: pointer;
   user-select: none;
+  will-change: transform, box-shadow;
 }
 .icon-btn:hover { 
   color: var(--brand); 
   border-color: var(--border-strong); 
   background: var(--surface-2);
-  transform: translateY(-1.5px);
+  transform: translateY(-2px) scale(1.04);
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 4px 12px -2px rgba(0, 0, 0, 0.08);
+    0 4px 14px -2px rgba(0, 0, 0, 0.08);
 }
 .icon-btn:active {
-  transform: translateY(1px) scale(0.97);
+  transform: translateY(1.5px) scale(0.94);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 70ms cubic-bezier(0.2, 0, 0, 1), box-shadow 70ms ease !important;
 }
-.icon-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform 160ms ease; }
-.icon-btn:hover svg { transform: scale(1.08); }
+.icon-btn svg { 
+  width: 20px; height: 20px; fill: currentColor; 
+  transition: transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+.icon-btn:hover svg { transform: scale(1.12); }
+.icon-btn:active svg { transform: scale(0.9); transition: transform 70ms ease; }
 .icon-btn--ghost { border-color: transparent; background: transparent; box-shadow: none; }
 .icon-btn--ghost:hover { background: var(--surface-2); border-color: transparent; }
 
@@ -365,7 +371,7 @@ h1, h2, h3, h4 {
 /* ------------------------------------------------------------ 7. Buttons */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
-  padding: .62rem 1.15rem;
+  padding: .62rem 1.18rem;
   border-radius: var(--radius-sm);
   font-size: .875rem; font-weight: 600;
   letter-spacing: -0.01em;
@@ -375,117 +381,116 @@ h1, h2, h3, h4 {
   white-space: nowrap;
   position: relative;
   transition: 
-    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
-    background 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    filter 160ms ease;
+    transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 240ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    filter 180ms ease;
   will-change: transform, box-shadow;
 }
 .btn:hover {
-  transform: translateY(-1.5px);
+  transform: translateY(-2.2px) scale(1.02);
 }
 .btn:active {
-  transform: translateY(1px) scale(0.98);
+  transform: translateY(1.5px) scale(0.96);
+  transition: transform 70ms cubic-bezier(0.2, 0, 0, 1), box-shadow 70ms ease !important;
 }
 .btn svg {
   width: 18px; height: 18px; fill: currentColor;
-  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1);
   flex-shrink: 0;
 }
 .btn:hover svg {
-  transform: scale(1.08);
+  transform: scale(1.14);
+}
+.btn:active svg {
+  transform: scale(0.9);
+  transition: transform 70ms ease;
 }
 
-/* Primary Action — Tactile 3D Depth & Light-Catching Inner Bevel */
+/* Primary Action — Tactile 3D Depth & Spring Aura */
 .btn--primary {
   background: 
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%),
     linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
     inset 0 -1px 0 rgba(0, 0, 0, 0.18),
-    0 1px 2px rgba(15, 23, 42, 0.12),
-    0 4px 12px -1px rgba(37, 99, 235, 0.38);
+    0 2px 4px rgba(15, 23, 42, 0.08),
+    0 6px 16px -2px rgba(37, 99, 235, 0.38);
 }
 .btn--primary:hover {
   background: 
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0) 100%),
     linear-gradient(135deg, var(--accent-strong), #1d4ed8);
-  border-color: rgba(255, 255, 255, 0.24);
-  transform: translateY(-1.5px);
+  border-color: rgba(255, 255, 255, 0.3);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
     inset 0 -1px 0 rgba(0, 0, 0, 0.14),
-    0 2px 4px rgba(15, 23, 42, 0.1),
-    0 8px 22px -2px rgba(37, 99, 235, 0.52);
+    0 4px 8px rgba(15, 23, 42, 0.1),
+    0 10px 24px -2px rgba(37, 99, 235, 0.5);
 }
 .btn--primary:active {
-  transform: translateY(1px) scale(0.98);
   box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.28),
-    0 1px 2px rgba(15, 23, 42, 0.12);
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(15, 23, 42, 0.12) !important;
 }
 
-/* Secondary / Ghost — Frosted Glass with Inner Bevel */
+/* Secondary / Ghost — Frosted Glass with Elastic Spring */
 .btn--ghost {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-soft);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
     inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-    0 1px 2px rgba(0, 0, 0, 0.04);
+    0 1px 3px rgba(15, 23, 42, 0.05);
 }
 .btn--ghost:hover {
   border-color: var(--border-strong);
   color: var(--text);
   background: var(--surface-2);
-  transform: translateY(-1.5px);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 4px 14px -2px rgba(0, 0, 0, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 6px 18px -2px rgba(15, 23, 42, 0.08);
 }
 .btn--ghost:active {
-  transform: translateY(1px) scale(0.98);
   box-shadow: 
-    inset 0 1px 3px rgba(0, 0, 0, 0.12),
-    0 1px 2px rgba(0, 0, 0, 0.04);
+    inset 0 1px 3px rgba(0, 0, 0, 0.14),
+    0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
-/* Danger / Destructive — Crimson 3D Bevel */
+/* Danger / Destructive — Crimson 3D Bevel with Spring Physics */
 .btn--danger {
   background: 
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 100%),
-    linear-gradient(135deg, #ef4444, #dc2626);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(135deg, var(--expense), #dc2626);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
     inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-    0 1px 2px rgba(15, 23, 42, 0.12),
-    0 4px 12px -1px rgba(220, 38, 38, 0.38);
+    0 2px 4px rgba(15, 23, 42, 0.08),
+    0 6px 16px -2px rgba(220, 38, 38, 0.38);
 }
 .btn--danger:hover {
   background: 
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%),
     linear-gradient(135deg, #dc2626, #b91c1c);
-  border-color: rgba(255, 255, 255, 0.24);
-  transform: translateY(-1.5px);
+  border-color: rgba(255, 255, 255, 0.28);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 2px 4px rgba(15, 23, 42, 0.1),
-    0 8px 22px -2px rgba(220, 38, 38, 0.52);
+    0 4px 8px rgba(15, 23, 42, 0.1),
+    0 10px 24px -2px rgba(220, 38, 38, 0.5);
 }
 .btn--danger:active {
-  transform: translateY(1px) scale(0.98);
   box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.28),
-    0 1px 2px rgba(15, 23, 42, 0.12);
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(15, 23, 42, 0.12) !important;
 }
 
 /* Soft Tinted Action */
@@ -501,21 +506,19 @@ h1, h2, h3, h4 {
   background: var(--accent);
   color: #fff;
   border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1.5px);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 4px 14px -1px rgba(37, 99, 235, 0.42);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 6px 18px -1px rgba(37, 99, 235, 0.42);
 }
 .btn--soft:active {
-  transform: translateY(1px) scale(0.98);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15) !important;
 }
 
 .btn--sm { padding: .42rem .82rem; font-size: .8rem; }
 .btn--block { width: 100%; }
 .btn[disabled] { opacity: .55; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
-/* Table/Row Action Icon Buttons */
+/* Table/Row Action Icon Buttons — Elastic Micro-Spring */
 .btn-icon {
   width: 34px; height: 34px; border-radius: 8px;
   display: inline-grid; place-items: center;
@@ -523,23 +526,131 @@ h1, h2, h3, h4 {
   border: 1px solid transparent;
   cursor: pointer;
   transition: 
-    transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 160ms ease,
+    color 160ms ease;
+  will-change: transform, box-shadow;
 }
-.btn-icon svg { width: 17px; height: 17px; fill: currentColor; transition: transform 150ms ease; }
+.btn-icon svg { width: 17px; height: 17px; fill: currentColor; transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
 .btn-icon:hover { 
   background: var(--surface-3); 
   color: var(--brand); 
-  transform: translateY(-1px);
+  transform: translateY(-1.5px) scale(1.08);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 2px 6px rgba(0, 0, 0, 0.06);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.08);
 }
-.btn-icon:hover svg { transform: scale(1.1); }
-.btn-icon:active { transform: translateY(0.5px) scale(0.96); }
+.btn-icon:hover svg { transform: scale(1.15); }
+.btn-icon:active { 
+  transform: translateY(1px) scale(0.92); 
+  transition: transform 70ms ease, box-shadow 70ms ease !important;
+}
+.btn-icon:active svg { transform: scale(0.88); transition: transform 70ms ease; }
 .btn-icon--danger:hover { background: var(--expense-soft); color: var(--expense); }
+
+/* ================= Dark Mode Theme Harmonization ================= */
+[data-theme="dark"] .btn--primary {
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(135deg, var(--accent), #1d4ed8);
+  border-color: rgba(147, 197, 253, 0.3);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    0 6px 20px -2px rgba(59, 130, 246, 0.45);
+}
+[data-theme="dark"] .btn--primary:hover {
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(135deg, var(--accent-strong), #2563eb);
+  border-color: rgba(191, 219, 254, 0.45);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    0 12px 28px -2px rgba(59, 130, 246, 0.6);
+}
+
+[data-theme="dark"] .btn--ghost {
+  background: rgba(22, 32, 50, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-soft);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .btn--ghost:hover {
+  background: rgba(31, 45, 69, 0.95);
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #ffffff;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 18px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(59, 130, 246, 0.25);
+}
+
+[data-theme="dark"] .btn--danger {
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(135deg, var(--expense), #be123c);
+  border-color: rgba(253, 164, 175, 0.3);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    0 6px 20px -2px rgba(244, 63, 94, 0.45);
+}
+[data-theme="dark"] .btn--danger:hover {
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(135deg, #fb7185, #e11d48);
+  border-color: rgba(254, 205, 211, 0.45);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    0 12px 28px -2px rgba(244, 63, 94, 0.6);
+}
+
+[data-theme="dark"] .btn--soft {
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+  border-color: rgba(96, 165, 250, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+[data-theme="dark"] .btn--soft:hover {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: rgba(147, 197, 253, 0.4);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 6px 18px rgba(59, 130, 246, 0.45);
+}
+
+[data-theme="dark"] .icon-btn {
+  background: rgba(22, 32, 50, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .icon-btn:hover {
+  background: rgba(31, 45, 69, 0.95);
+  border-color: rgba(96, 165, 250, 0.4);
+  color: var(--accent-strong);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 6px 16px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(59, 130, 246, 0.25);
+}
+
+[data-theme="dark"] .btn-icon:hover {
+  background: rgba(31, 45, 69, 0.85);
+  color: var(--brand);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
 
 /* ------------------------------------------------------------- 8. Badges */
 .badge {
@@ -820,11 +931,15 @@ h1, h2, h3, h4 {
     inset 0 -1px 0 rgba(0, 0, 0, 0.18),
     0 4px 16px rgba(37, 99, 235, 0.42);
   cursor: pointer;
-  transition: transform var(--transition), background var(--transition), box-shadow var(--transition);
+  transition: 
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+    background 180ms ease, 
+    box-shadow 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, box-shadow;
 }
 
 .global-fab__btn:hover {
-  transform: scale(1.06) translateY(-2px);
+  transform: scale(1.08) translateY(-3px);
   background: 
     linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0) 100%),
     linear-gradient(135deg, var(--accent-strong), #1d4ed8);
@@ -833,12 +948,19 @@ h1, h2, h3, h4 {
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
     0 8px 24px rgba(37, 99, 235, 0.58);
 }
+.global-fab__btn:active {
+  transform: scale(0.94) translateY(1px);
+  transition: transform 70ms cubic-bezier(0.2, 0, 0, 1), box-shadow 70ms ease !important;
+}
 
 .global-fab__btn svg {
   width: 24px;
   height: 24px;
   fill: currentColor;
-  transition: transform var(--transition);
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.global-fab__btn:hover svg {
+  transform: scale(1.12);
 }
 
 .global-fab__btn .icon-close { display: none; }
@@ -848,6 +970,26 @@ h1, h2, h3, h4 {
   background: var(--text);
   color: var(--surface);
   transform: rotate(90deg);
+}
+
+/* Dark mode FAB theme glow */
+[data-theme="dark"] .global-fab__btn {
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(135deg, var(--accent), #1d4ed8);
+  border-color: rgba(147, 197, 253, 0.35);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 6px 22px rgba(59, 130, 246, 0.55);
+}
+[data-theme="dark"] .global-fab__btn:hover {
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(135deg, var(--accent-strong), #2563eb);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 10px 28px rgba(59, 130, 246, 0.65);
 }
 
 .global-fab__menu {
