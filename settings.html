@@ -141,6 +141,32 @@
               </form>
             </section>
 
+            <!-- Categories management -->
+            <section class="card settings-section" aria-labelledby="catHeading">
+              <div class="settings-section__head row row--between">
+                <div>
+                  <h2 id="catHeading">Custom Categories</h2>
+                  <p>Manage your spending and income categories and custom colors.</p>
+                </div>
+                <button class="btn btn--soft btn--sm" type="button" id="openAddCategoryBtn">
+                  <svg viewBox="0 0 24 24" width="16" height="16"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                  <span>Add Category</span>
+                </button>
+              </div>
+
+              <div class="category-manager">
+                <div>
+                  <h3 class="small muted" style="margin-bottom: .6rem; text-transform: uppercase; letter-spacing: .08em;">Expense Categories</h3>
+                  <div class="category-badge-list" id="expenseCategoryList"></div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                  <h3 class="small muted" style="margin-bottom: .6rem; text-transform: uppercase; letter-spacing: .08em;">Income Categories</h3>
+                  <div class="category-badge-list" id="incomeCategoryList"></div>
+                </div>
+              </div>
+            </section>
+
             <!-- Data management -->
             <section class="card settings-section" aria-labelledby="dataHeading">
               <div class="settings-section__head">
@@ -205,6 +231,50 @@
           </aside>
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- Add Category Modal -->
+  <div class="modal" id="categoryModal" hidden>
+    <div class="modal__dialog modal__dialog--sm" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
+      <form id="categoryForm" novalidate>
+        <div class="modal__header">
+          <div>
+            <h2 class="modal__title" id="categoryModalTitle">New Category</h2>
+            <p class="modal__subtitle">Create a custom income or expense category</p>
+          </div>
+          <button class="icon-btn icon-btn--ghost" type="button" data-close-modal aria-label="Close dialog">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+        <div class="modal__body">
+          <div class="form-grid">
+            <div class="field field--full">
+              <span class="field-label">Category Type *</span>
+              <div class="segmented" role="radiogroup">
+                <input type="radio" name="catType" id="catTypeExpense" value="expense" checked>
+                <label for="catTypeExpense">Expense</label>
+                <input type="radio" name="catType" id="catTypeIncome" value="income">
+                <label for="catTypeIncome">Income</label>
+              </div>
+            </div>
+            <div class="field field--full">
+              <label for="catName">Category Name *</label>
+              <input class="input" type="text" id="catName" placeholder="e.g. Pet Care, Subscriptions" maxlength="30" data-autofocus>
+              <span class="error-msg" id="errCatName"></span>
+            </div>
+            <div class="field field--full">
+              <label>Color Swatch</label>
+              <div class="color-swatches" id="colorSwatches"></div>
+              <input type="color" id="catCustomColor" value="#3b82f6" style="margin-top: .6rem; height: 36px; padding: 2px; cursor: pointer;">
+            </div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--ghost" type="button" data-close-modal>Cancel</button>
+          <button class="btn btn--primary" type="submit">Create Category</button>
+        </div>
+      </form>
     </div>
   </div>
 

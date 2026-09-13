@@ -376,6 +376,38 @@
       </div>`).join('');
   }
 
+  function renderGoals() {
+    const host = FT.$('#dashboardGoals');
+    if (!host) return;
+    const goals = FTStorage.getGoals().map(FT.goalProgress).slice(0, 3);
+
+    if (!goals.length) {
+      host.innerHTML = FT.emptyState({
+        icon: 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z',
+        title: 'No active savings goals',
+        message: 'Set target buckets for vacations, emergency funds, or big purchases.',
+        actionLabel: 'Create Goal',
+        actionHref: 'budgets.html?tab=goals'
+      });
+      return;
+    }
+
+    host.innerHTML = goals.map((g) => `
+      <div class="card card--hover goal-mini" style="padding: 1.15rem; border: 1px solid var(--border); display: flex; flex-direction: column; gap: .65rem;">
+        <div class="row row--between">
+          <strong style="font-size: .95rem;">${FT.escapeHtml(g.title)}</strong>
+          <span class="badge ${g.isCompleted ? 'badge--completed' : ''}">${g.isCompleted ? 'Completed 🎉' : `${g.percent.toFixed(0)}%`}</span>
+        </div>
+        <div class="progress" role="progressbar" aria-valuenow="${g.percent.toFixed(0)}" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress__bar" style="width:${g.clamped}%; background:${g.color}"></div>
+        </div>
+        <div class="row row--between small muted">
+          <span>${FT.formatCurrency(g.currentAmount)} saved</span>
+          <span>Target: ${FT.formatCurrency(g.targetAmount)}</span>
+        </div>
+      </div>`).join('');
+  }
+
   /* ----------------------------------------------------------- bootstrap */
 
   function renderDashboard() {
@@ -394,6 +426,7 @@
     renderMonthlySpendChart(transactions);
     renderRecent(transactions);
     renderBudgets(transactions);
+    renderGoals();
     renderHealth(transactions, totals);
   }
 

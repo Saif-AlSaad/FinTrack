@@ -22,6 +22,8 @@ const FTStorage = (() => {
   const KEYS = {
     get transactions() { return getDynamicKey('fintrack:transactions'); },
     get budgets() { return getDynamicKey('fintrack:budgets'); },
+    get goals() { return getDynamicKey('fintrack:goals'); },
+    get customCategories() { return getDynamicKey('fintrack:custom_categories'); },
     get settings() { return getDynamicKey('fintrack:settings'); },
     get seeded() { return getDynamicKey('fintrack:seeded'); },
     users: 'fintrack:users'
@@ -280,6 +282,107 @@ const FTStorage = (() => {
     return getBudgets().some(b => b.category === category && b.month === month && b.id !== ignoreId);
   }
 
+  /* -------------------------------------------------------------- goals */
+  const normalizeGoal = (g) => ({
+    id: g.id || uid('gl'),
+    title: String(g.title ?? '').trim(),
+    targetAmount: Math.abs(Number(g.targetAmount) || 0),
+    currentAmount: Math.abs(Number(g.currentAmount) || 0),
+    targetDate: String(g.targetDate ?? ''),
+    category: String(g.category ?? 'Savings'),
+    color: String(g.color ?? '#10b981'),
+    note: String(g.note ?? '').trim(),
+    createdAt: g.createdAt || new Date().toISOString()
+  });
+
+  function getGoals() {
+    const data = read(KEYS.goals, []);
+    if (!Array.isArray(data)) return [];
+    return data.filter((g) => g && typeof g === 'object').map(normalizeGoal);
+  }
+
+  function saveGoals(list) {
+    const clean = (Array.isArray(list) ? list : []).map(normalizeGoal);
+    write(KEYS.goals, clean);
+    emit('goals', { goals: clean });
+    return clean;
+  }
+
+  function addGoal(goal) {
+    const list = getGoals();
+    const record = normalizeGoal({ ...goal, id: uid('gl') });
+    list.push(record);
+    saveGoals(list);
+    return record;
+  }
+
+  function updateGoal(id, patch) {
+    const list = getGoals();
+    const index = list.findIndex((g) => g.id === id);
+    if (index === -1) return null;
+    list[index] = normalizeGoal({ ...list[index], ...patch, id });
+    saveGoals(list);
+    return list[index];
+  }
+
+  function deleteGoal(id) {
+    const list = getGoals();
+    const next = list.filter((g) => g.id !== id);
+    if (next.length !== list.length) saveGoals(next);
+    return next.length !== list.length;
+  }
+
+  function depositToGoal(id, amount) {
+    const list = getGoals();
+    const goal = list.find((g) => g.id === id);
+    if (!goal) throw new Error('Goal not found.');
+    const delta = Number(amount) || 0;
+    goal.currentAmount = Math.max(0, goal.currentAmount + delta);
+    saveGoals(list);
+    return goal;
+  }
+
+  /* ---------------------------------------------------- custom categories */
+  const normalizeCustomCategory = (c) => ({
+    id: c.id || uid('cat'),
+    name: String(c.name ?? '').trim(),
+    type: c.type === 'income' ? 'income' : 'expense',
+    color: String(c.color ?? '#2563eb'),
+    icon: String(c.icon ?? 'Other')
+  });
+
+  function getCustomCategories() {
+    const data = read(KEYS.customCategories, []);
+    if (!Array.isArray(data)) return [];
+    return data.filter((c) => c && typeof c === 'object').map(normalizeCustomCategory);
+  }
+
+  function saveCustomCategories(list) {
+    const clean = (Array.isArray(list) ? list : []).map(normalizeCustomCategory);
+    write(KEYS.customCategories, clean);
+    emit('categories', { categories: clean });
+    return clean;
+  }
+
+  function addCustomCategory(cat) {
+    const list = getCustomCategories();
+    const nameLower = String(cat.name).trim().toLowerCase();
+    if (list.some(c => c.name.toLowerCase() === nameLower && c.type === cat.type)) {
+      throw new Error('A category with this name already exists.');
+    }
+    const record = normalizeCustomCategory({ ...cat, id: uid('cat') });
+    list.push(record);
+    saveCustomCategories(list);
+    return record;
+  }
+
+  function deleteCustomCategory(id) {
+    const list = getCustomCategories();
+    const next = list.filter(c => c.id !== id);
+    if (next.length !== list.length) saveCustomCategories(next);
+    return next.length !== list.length;
+  }
+
   /* ------------------------------------------------------------- settings */
   function getSettings() {
     const data = read(KEYS.settings, {});
@@ -348,12 +451,27 @@ const FTStorage = (() => {
     ].map((b) => normalizeBudget({ ...b, month, id: uid('bg') }));
   }
 
+  function buildSampleGoals() {
+    const now = new Date();
+    const dateIn = (months) => {
+      const d = new Date(now.getFullYear(), now.getMonth() + months, 15);
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+    return [
+      { title: 'Emergency Fund', targetAmount: 50000, currentAmount: 32500, targetDate: dateIn(6), category: 'Savings', color: '#10b981', note: '6 months of essential living expenses' },
+      { title: 'Japan Vacation', targetAmount: 120000, currentAmount: 48000, targetDate: dateIn(8), category: 'Travel', color: '#3b82f6', note: 'Flights, hotel and leisure budget' },
+      { title: 'MacBook Pro Setup', targetAmount: 85000, currentAmount: 65000, targetDate: dateIn(2), category: 'Tech', color: '#8b5cf6', note: 'Workstation upgrade' }
+    ].map(g => normalizeGoal({ ...g, id: uid('gl') }));
+  }
+
   function seedSampleData(force = false) {
     const seeded = readRaw(KEYS.seeded);
     if (!force && seeded !== null) return false;
 
     write(KEYS.transactions, buildSampleTransactions());
     write(KEYS.budgets, buildSampleBudgets());
+    write(KEYS.goals, buildSampleGoals());
     writeRaw(KEYS.seeded, 'true');
     emit('seed');
     return true;
@@ -368,6 +486,8 @@ const FTStorage = (() => {
       user: getCurrentUser()?.email,
       transactions: getTransactions(),
       budgets: getBudgets(),
+      goals: getGoals(),
+      customCategories: getCustomCategories(),
       settings: getSettings()
     };
   }
@@ -377,6 +497,8 @@ const FTStorage = (() => {
     if (!Array.isArray(payload.transactions)) throw new Error('Backup is missing transactions.');
     write(KEYS.transactions, payload.transactions.map(normalizeTransaction));
     write(KEYS.budgets, Array.isArray(payload.budgets) ? payload.budgets.map(normalizeBudget) : []);
+    if (Array.isArray(payload.goals)) write(KEYS.goals, payload.goals.map(normalizeGoal));
+    if (Array.isArray(payload.customCategories)) write(KEYS.customCategories, payload.customCategories.map(normalizeCustomCategory));
     if (payload.settings && typeof payload.settings === 'object') {
       const { avatar, name, theme, currency, notifications } = payload.settings;
       saveSettings({ avatar, name, theme, currency, notifications });
@@ -389,6 +511,8 @@ const FTStorage = (() => {
   function clearAllData(keepSettings = true) {
     removeRaw(KEYS.transactions);
     removeRaw(KEYS.budgets);
+    removeRaw(KEYS.goals);
+    removeRaw(KEYS.customCategories);
     writeRaw(KEYS.seeded, 'false');
     if (!keepSettings) removeRaw(KEYS.settings);
     emit('clear');
@@ -400,6 +524,8 @@ const FTStorage = (() => {
     requestPasswordReset, resetPassword,
     getTransactions, saveTransactions, addTransaction, updateTransaction, deleteTransaction, getTransaction,
     getBudgets, saveBudgets, addBudget, updateBudget, deleteBudget, budgetExists,
+    getGoals, saveGoals, addGoal, updateGoal, deleteGoal, depositToGoal,
+    getCustomCategories, saveCustomCategories, addCustomCategory, deleteCustomCategory,
     getSettings, saveSettings, seedSampleData, exportData, importData, clearAllData
   };
 })();

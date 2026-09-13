@@ -75,7 +75,26 @@ const FT = (() => {
     return `<svg class="${className}" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${path}"/></svg>`;
   };
 
-  const categoryColor = (category) => CATEGORY_COLORS[category] || '#94a3b8';
+  const getCategories = (type = 'expense') => {
+    const defaults = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    let custom = [];
+    try {
+      if (window.FTStorage && typeof FTStorage.getCustomCategories === 'function') {
+        custom = FTStorage.getCustomCategories().filter(c => c.type === type).map(c => c.name);
+      }
+    } catch (e) {}
+    return [...new Set([...defaults, ...custom])];
+  };
+
+  const categoryColor = (category) => {
+    try {
+      if (window.FTStorage && typeof FTStorage.getCustomCategories === 'function') {
+        const custom = FTStorage.getCustomCategories().find(c => c.name.toLowerCase() === String(category).toLowerCase());
+        if (custom && custom.color) return custom.color;
+      }
+    } catch (e) {}
+    return CATEGORY_COLORS[category] || '#6366f1';
+  };
 
   const getSettings = () => FTStorage.getSettings();
 
@@ -215,6 +234,37 @@ const FT = (() => {
       clamped: Math.min(percent, 100),
       status,
       statusLabel: status === 'over' ? 'Over Budget' : status === 'warning' ? 'Warning' : 'On Track'
+    };
+  }
+
+  /** Calculate savings goal progress and time left. */
+  function goalProgress(goal) {
+    const target = Math.max(1, Number(goal.targetAmount) || 1);
+    const current = Math.max(0, Number(goal.currentAmount) || 0);
+    const percent = (current / target) * 100;
+    const remaining = Math.max(0, target - current);
+    const isCompleted = current >= target;
+
+    let daysLeft = null;
+    if (goal.targetDate) {
+      const [y, m, d] = String(goal.targetDate).split('-').map(Number);
+      if (y && m && d) {
+        const targetDate = new Date(y, m - 1, d);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        daysLeft = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+      }
+    }
+
+    return {
+      ...goal,
+      targetAmount: target,
+      currentAmount: current,
+      percent,
+      clamped: Math.min(percent, 100),
+      remaining,
+      isCompleted,
+      daysLeft
     };
   }
 
@@ -629,7 +679,7 @@ const FT = (() => {
   /** Populate a <select> with category options for a transaction type. */
   function fillCategoryOptions(select, type, selected = '') {
     if (!select) return;
-    const list = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    const list = getCategories(type);
     select.innerHTML = `<option value="">Select category</option>${list
       .map((c) => `<option value="${c}"${c === selected ? ' selected' : ''}>${c}</option>`)
       .join('')}`;
@@ -818,6 +868,47 @@ const FT = (() => {
     });
   }
 
+  let deferredPrompt = null;
+
+  function initPWAInstall() {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showPWAInstallButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      hidePWAInstallButton();
+      toast('FinTrack installed successfully!', 'success');
+    });
+  }
+
+  function showPWAInstallButton() {
+    const footer = document.querySelector('.sidebar__footer');
+    if (!footer || $('#pwaInstallBtn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'sidebar-footer-link pwa-install-btn';
+    btn.id = 'pwaInstallBtn';
+    btn.type = 'button';
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+      <span>Install App</span>`;
+    btn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') hidePWAInstallButton();
+      deferredPrompt = null;
+    });
+    footer.insertBefore(btn, footer.firstChild);
+  }
+
+  function hidePWAInstallButton() {
+    const btn = $('#pwaInstallBtn');
+    if (btn) btn.remove();
+  }
+
   /* ------------------------------------------------------------ bootstrap */
 
   function checkAuth() {
@@ -850,6 +941,7 @@ const FT = (() => {
     syncThemeButtons();
     initGlobalFAB();
     initKeyboardShortcuts();
+    initPWAInstall();
 
     // Wire up global logout buttons if present
     $$('[data-action="logout"]').forEach(btn => btn.addEventListener('click', handleLogout));
@@ -877,7 +969,8 @@ const FT = (() => {
     toast, confirmAction, openModal, closeModal,
     chartTheme, renderChart, showChartEmpty, restoreChartCanvas, currencyTick, emptyState,
     getInitials, compressImage, renderProfile, handleLogout,
-    showShortcutsModal, handleQuickAdd
+    showShortcutsModal, handleQuickAdd,
+    getCategories, goalProgress
   };
 })();
 
