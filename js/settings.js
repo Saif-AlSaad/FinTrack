@@ -193,7 +193,16 @@
       importFile: FT.$('#importFile'),
       photoInput: FT.$('#photoInput'),
       uploadPhotoBtn: FT.$('#uploadPhotoBtn'),
-      removePhotoBtn: FT.$('#removePhotoBtn')
+      removePhotoBtn: FT.$('#removePhotoBtn'),
+      openAddCategoryBtn: FT.$('#openAddCategoryBtn'),
+      categoryModal: FT.$('#categoryModal'),
+      categoryForm: FT.$('#categoryForm'),
+      catName: FT.$('#catName'),
+      errCatName: FT.$('#errCatName'),
+      catCustomColor: FT.$('#catCustomColor'),
+      colorSwatches: FT.$('#colorSwatches'),
+      expenseCategoryList: FT.$('#expenseCategoryList'),
+      incomeCategoryList: FT.$('#incomeCategoryList')
     });
 
     fillForm();
@@ -243,12 +252,160 @@
     FT.$('#sampleBtn').addEventListener('click', handleSampleData);
     FT.$('#clearBtn').addEventListener('click', handleClearData);
 
+    // Custom categories wiring
+    if (els.openAddCategoryBtn) {
+      els.openAddCategoryBtn.addEventListener('click', () => {
+        els.categoryForm.reset();
+        els.catName.classList.remove('is-invalid');
+        if (els.errCatName) els.errCatName.textContent = '';
+        selectSwatch('#3b82f6');
+        FT.openModal(els.categoryModal);
+      });
+    }
+
+    if (els.categoryForm) {
+      els.categoryForm.addEventListener('submit', handleCategorySubmit);
+    }
+
+    if (els.catCustomColor) {
+      els.catCustomColor.addEventListener('input', (e) => {
+        selectSwatch(e.target.value, false);
+      });
+    }
+
+    if (els.expenseCategoryList) {
+      els.expenseCategoryList.addEventListener('click', handleCategoryClick);
+    }
+    if (els.incomeCategoryList) {
+      els.incomeCategoryList.addEventListener('click', handleCategoryClick);
+    }
+
+    initSwatches();
+    renderCategories();
+
     // Keep the radio buttons in sync with the topbar theme toggle
     document.addEventListener('ft:themechange', (e) => {
       const target = document.getElementById(e.detail.theme === 'dark' ? 'themeDark' : 'themeLight');
       if (target) target.checked = true;
     });
-    document.addEventListener('ft:datachange', renderAccountStats);
+    document.addEventListener('ft:datachange', () => {
+      renderAccountStats();
+      renderCategories();
+    });
+  }
+
+  const SWATCHES = [
+    '#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4',
+    '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#64748b'
+  ];
+
+  function initSwatches() {
+    if (!els.colorSwatches) return;
+    els.colorSwatches.innerHTML = SWATCHES.map(c => `
+      <button type="button" class="swatch-btn${c === '#3b82f6' ? ' is-active' : ''}" data-color="${c}" style="background-color: ${c}" aria-label="Color ${c}"></button>
+    `).join('');
+
+    els.colorSwatches.addEventListener('click', (e) => {
+      const btn = e.target.closest('.swatch-btn');
+      if (!btn) return;
+      selectSwatch(btn.dataset.color);
+    });
+  }
+
+  function selectSwatch(color, updateInput = true) {
+    if (updateInput && els.catCustomColor) {
+      els.catCustomColor.value = color;
+    }
+    if (els.colorSwatches) {
+      els.colorSwatches.querySelectorAll('.swatch-btn').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.color.toLowerCase() === color.toLowerCase());
+      });
+    }
+  }
+
+  function renderCategories() {
+    if (!els.expenseCategoryList || !els.incomeCategoryList) return;
+
+    const customCats = FTStorage.getCustomCategories();
+    const defaultsExpense = FT.EXPENSE_CATEGORIES || ['Food', 'Housing', 'Transport', 'Entertainment', 'Shopping', 'Health', 'Utilities', 'Other'];
+    const defaultsIncome = FT.INCOME_CATEGORIES || ['Salary', 'Freelance', 'Investments', 'Gifts', 'Other'];
+
+    const renderList = (defaults, type) => {
+      const customForType = customCats.filter(c => c.type === type);
+      const defaultBadges = defaults.map(name => {
+        const color = FT.categoryColor(name);
+        return `
+          <span class="category-badge">
+            <span class="category-badge__dot" style="background:${color}"></span>
+            <span>${FT.escapeHtml(name)}</span>
+          </span>`;
+      }).join('');
+
+      const customBadges = customForType.map(c => {
+        return `
+          <span class="category-badge is-custom">
+            <span class="category-badge__dot" style="background:${c.color}"></span>
+            <span>${FT.escapeHtml(c.name)}</span>
+            <button type="button" class="category-badge__del" data-del-cat="${c.id}" data-cat-name="${FT.escapeHtml(c.name)}" aria-label="Delete category ${FT.escapeHtml(c.name)}">
+              <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+          </span>`;
+      }).join('');
+
+      return defaultBadges + customBadges;
+    };
+
+    els.expenseCategoryList.innerHTML = renderList(defaultsExpense, 'expense');
+    els.incomeCategoryList.innerHTML = renderList(defaultsIncome, 'income');
+  }
+
+  function handleCategorySubmit(e) {
+    e.preventDefault();
+    const name = (els.catName.value || '').trim();
+    if (!name) {
+      els.catName.classList.add('is-invalid');
+      if (els.errCatName) els.errCatName.textContent = 'Please enter a category name.';
+      return;
+    }
+
+    const type = (els.categoryForm.querySelector('input[name="catType"]:checked') || {}).value || 'expense';
+    const color = els.catCustomColor ? els.catCustomColor.value : '#3b82f6';
+
+    const existingNames = FT.getCategories(type).map(n => n.toLowerCase());
+    if (existingNames.includes(name.toLowerCase())) {
+      els.catName.classList.add('is-invalid');
+      if (els.errCatName) els.errCatName.textContent = 'A category with this name already exists.';
+      return;
+    }
+
+    try {
+      FTStorage.addCustomCategory({ name, type, color });
+      FT.closeModal(els.categoryModal);
+      renderCategories();
+      FT.toast(`Added "${name}" to ${type} categories.`, 'success', { force: true });
+    } catch (err) {
+      els.catName.classList.add('is-invalid');
+      if (els.errCatName) els.errCatName.textContent = err.message;
+    }
+  }
+
+  async function handleCategoryClick(e) {
+    const btn = e.target.closest('[data-del-cat]');
+    if (!btn) return;
+    const id = btn.dataset.delCat;
+    const name = btn.dataset.catName || 'this category';
+
+    const confirmed = await FT.confirmAction({
+      title: 'Delete category?',
+      message: `Are you sure you want to delete "${name}"? Existing transactions will keep this category name, but it will no longer appear in category selectors.`,
+      confirmText: 'Delete Category',
+      danger: true
+    });
+
+    if (!confirmed) return;
+    FTStorage.deleteCustomCategory(id);
+    renderCategories();
+    FT.toast(`Deleted "${name}".`, 'success', { force: true });
   }
 
   document.addEventListener('DOMContentLoaded', init);

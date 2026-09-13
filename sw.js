@@ -3,7 +3,7 @@
    Service Worker for offline support and asset caching.
    ========================================================================== */
 
-const CACHE_NAME = 'fintrack-v2.1';
+const CACHE_NAME = 'fintrack-v2.2';
 
 const STATIC_ASSETS = [
   './',
@@ -29,6 +29,7 @@ const STATIC_ASSETS = [
   'js/reports.js',
   'js/settings.js',
   'js/auth.js',
+  'js/vendor/html2pdf.bundle.min.js',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'
