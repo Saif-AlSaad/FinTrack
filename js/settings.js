@@ -51,23 +51,137 @@
     }
   }
 
-  async function handlePhotoSelect(event) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    
+  /* ---------------------------------------------------- photo cropper */
+  const cropState = {
+    img: null,
+    rotation: 0,
+    zoom: 1,
+    panX: 0,
+    panY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    startPanX: 0,
+    startPanY: 0
+  };
+
+  const CROP_SIZE = 280;
+  const CIRCLE_RADIUS = 108; // 216px diameter viewfinder
+  const CENTER = 140;
+
+  function drawCrop() {
+    if (!cropState.img || !els.cropCanvas) return;
+    const ctx = els.cropCanvas.getContext('2d');
+    ctx.clearRect(0, 0, CROP_SIZE, CROP_SIZE);
+    ctx.save();
+
+    ctx.translate(CENTER, CENTER);
+
+    const isSideways = cropState.rotation % 180 !== 0;
+    const effectiveW = isSideways ? cropState.img.height : cropState.img.width;
+    const effectiveH = isSideways ? cropState.img.width : cropState.img.height;
+
+    // Minimum scale so the image always covers the 216px circle
+    const baseScale = Math.max((CIRCLE_RADIUS * 2) / effectiveW, (CIRCLE_RADIUS * 2) / effectiveH);
+    const currentScale = baseScale * cropState.zoom;
+
+    // Constrain panning within image bounds so the circle is always filled
+    const maxPanX = Math.max(0, (effectiveW * currentScale - (CIRCLE_RADIUS * 2)) / 2);
+    const maxPanY = Math.max(0, (effectiveH * currentScale - (CIRCLE_RADIUS * 2)) / 2);
+    cropState.panX = Math.max(-maxPanX, Math.min(maxPanX, cropState.panX));
+    cropState.panY = Math.max(-maxPanY, Math.min(maxPanY, cropState.panY));
+
+    ctx.translate(cropState.panX, cropState.panY);
+    ctx.rotate((cropState.rotation * Math.PI) / 180);
+    ctx.scale(currentScale, currentScale);
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(cropState.img, -cropState.img.width / 2, -cropState.img.height / 2);
+
+    ctx.restore();
+  }
+
+  function openPhotoCropper(image) {
+    cropState.img = image;
+    cropState.rotation = 0;
+    cropState.zoom = 1;
+    cropState.panX = 0;
+    cropState.panY = 0;
+    if (els.cropZoomRange) els.cropZoomRange.value = 1;
+
+    FT.openModal(els.photoAdjustModal);
+    requestAnimationFrame(() => {
+      drawCrop();
+    });
+  }
+
+  function handlePhotoFile(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+      FT.toast('Please select an image file (PNG, JPG, WebP).', 'warn', { force: true });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      FT.toast('Image must be smaller than 10 MB.', 'warn', { force: true });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => FT.toast('Could not read that image file.', 'error', { force: true });
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => FT.toast('This file could not be decoded as an image.', 'error', { force: true });
+      img.onload = () => openPhotoCropper(img);
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function applyPhotoCrop() {
+    if (!cropState.img) return;
+
+    // Render 320x320 high-res output
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = 320;
+    outCanvas.height = 320;
+    const outCtx = outCanvas.getContext('2d');
+
+    const outRatio = 320 / (CIRCLE_RADIUS * 2); // 320 / 216
+    const isSideways = cropState.rotation % 180 !== 0;
+    const effectiveW = isSideways ? cropState.img.height : cropState.img.width;
+    const effectiveH = isSideways ? cropState.img.width : cropState.img.height;
+    const baseScale = Math.max((CIRCLE_RADIUS * 2) / effectiveW, (CIRCLE_RADIUS * 2) / effectiveH);
+    const currentScale = baseScale * cropState.zoom * outRatio;
+
+    outCtx.save();
+    outCtx.translate(160, 160);
+    outCtx.translate(cropState.panX * outRatio, cropState.panY * outRatio);
+    outCtx.rotate((cropState.rotation * Math.PI) / 180);
+    outCtx.scale(currentScale, currentScale);
+
+    outCtx.imageSmoothingEnabled = true;
+    outCtx.imageSmoothingQuality = 'high';
+    outCtx.drawImage(cropState.img, -cropState.img.width / 2, -cropState.img.height / 2);
+    outCtx.restore();
+
     try {
-      els.uploadPhotoBtn.disabled = true;
-      const avatar = await FT.compressImage(file);
+      const avatar = outCanvas.toDataURL('image/jpeg', 0.88);
       FTStorage.saveSettings({ avatar });
       FT.renderProfile();
       updatePhotoUI(true);
-      FT.toast('Profile photo updated successfully.', 'success', { force: true });
-    } catch (err) {
-      FT.toast(err.message || 'Could not upload that image.', 'error', { force: true });
+      FT.closeModal(els.photoAdjustModal);
+      FT.toast('Profile photo set and centered perfectly!', 'success', { force: true });
+    } catch (e) {
+      FT.toast('Could not save profile photo.', 'error', { force: true });
     } finally {
-      els.uploadPhotoBtn.disabled = false;
-      els.photoInput.value = '';  // reset so same file can be re-selected
+      if (els.photoInput) els.photoInput.value = '';
     }
+  }
+
+  function handlePhotoSelect(event) {
+    const file = event.target.files && event.target.files[0];
+    if (file) handlePhotoFile(file);
+    event.target.value = '';
   }
 
   async function handleRemovePhoto() {
@@ -194,6 +308,13 @@
       photoInput: FT.$('#photoInput'),
       uploadPhotoBtn: FT.$('#uploadPhotoBtn'),
       removePhotoBtn: FT.$('#removePhotoBtn'),
+      avatarUploadTrigger: FT.$('#avatarUploadTrigger'),
+      photoAdjustModal: FT.$('#photoAdjustModal'),
+      cropViewport: FT.$('#cropViewport'),
+      cropCanvas: FT.$('#cropCanvas'),
+      cropZoomRange: FT.$('#cropZoomRange'),
+      cropRotateBtn: FT.$('#cropRotateBtn'),
+      cropApplyBtn: FT.$('#cropApplyBtn'),
       openAddCategoryBtn: FT.$('#openAddCategoryBtn'),
       categoryModal: FT.$('#categoryModal'),
       categoryForm: FT.$('#categoryForm'),
@@ -208,15 +329,107 @@
     fillForm();
     renderAccountStats();
 
-    // Photo upload wiring
+    // Photo upload and adjust wiring
     if (els.uploadPhotoBtn && els.photoInput) {
       els.uploadPhotoBtn.addEventListener('click', () => els.photoInput.click());
+    }
+    if (els.avatarUploadTrigger && els.photoInput) {
+      els.avatarUploadTrigger.addEventListener('click', () => els.photoInput.click());
+      els.avatarUploadTrigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          els.photoInput.click();
+        }
+      });
+      // Drag & drop file onto avatar circle
+      els.avatarUploadTrigger.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        els.avatarUploadTrigger.classList.add('is-dragover');
+      });
+      els.avatarUploadTrigger.addEventListener('dragleave', () => {
+        els.avatarUploadTrigger.classList.remove('is-dragover');
+      });
+      els.avatarUploadTrigger.addEventListener('drop', (e) => {
+        e.preventDefault();
+        els.avatarUploadTrigger.classList.remove('is-dragover');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handlePhotoFile(e.dataTransfer.files[0]);
+        }
+      });
     }
     if (els.photoInput) {
       els.photoInput.addEventListener('change', handlePhotoSelect);
     }
     if (els.removePhotoBtn) {
       els.removePhotoBtn.addEventListener('click', handleRemovePhoto);
+    }
+
+    // Interactive Crop Viewport Pointer/Touch events
+    if (els.cropViewport) {
+      const getEventPointer = (e) => {
+        if (e.touches && e.touches[0]) {
+          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+      };
+
+      const onStart = (e) => {
+        e.preventDefault();
+        cropState.isDragging = true;
+        els.cropViewport.classList.add('is-dragging');
+        const p = getEventPointer(e);
+        cropState.startX = p.x;
+        cropState.startY = p.y;
+        cropState.startPanX = cropState.panX;
+        cropState.startPanY = cropState.panY;
+      };
+
+      const onMove = (e) => {
+        if (!cropState.isDragging) return;
+        const p = getEventPointer(e);
+        cropState.panX = cropState.startPanX + (p.x - cropState.startX);
+        cropState.panY = cropState.startPanY + (p.y - cropState.startY);
+        drawCrop();
+      };
+
+      const onEnd = () => {
+        cropState.isDragging = false;
+        els.cropViewport.classList.remove('is-dragging');
+      };
+
+      els.cropViewport.addEventListener('mousedown', onStart);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onEnd);
+
+      els.cropViewport.addEventListener('touchstart', onStart, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onEnd);
+
+      els.cropViewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.08 : -0.08;
+        cropState.zoom = Math.max(1, Math.min(3, cropState.zoom + delta));
+        if (els.cropZoomRange) els.cropZoomRange.value = cropState.zoom;
+        drawCrop();
+      }, { passive: false });
+    }
+
+    if (els.cropZoomRange) {
+      els.cropZoomRange.addEventListener('input', () => {
+        cropState.zoom = parseFloat(els.cropZoomRange.value) || 1;
+        drawCrop();
+      });
+    }
+
+    if (els.cropRotateBtn) {
+      els.cropRotateBtn.addEventListener('click', () => {
+        cropState.rotation = (cropState.rotation + 90) % 360;
+        drawCrop();
+      });
+    }
+
+    if (els.cropApplyBtn) {
+      els.cropApplyBtn.addEventListener('click', applyPhotoCrop);
     }
 
     // Keep the remove button state in sync if avatar changes elsewhere

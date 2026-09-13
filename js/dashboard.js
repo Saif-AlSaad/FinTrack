@@ -32,43 +32,120 @@
     return `<span class="trend ${cls}"><svg viewBox="0 0 24 24"><path d="${icon}"/></svg>${Math.abs(value).toFixed(1)}%</span>`;
   };
 
+  /* ---------------------------------------------------- sparkline helper */
+
+  /**
+   * Generates a sleek, responsive SVG sparkline with an area gradient fill and terminal point dot.
+   */
+  function generateSparklineSvg(dataPoints, strokeColor, uniqueId) {
+    if (!dataPoints || dataPoints.length < 2) return '';
+    const width = 86;
+    const height = 32;
+    const pad = 4;
+    const min = Math.min(...dataPoints);
+    const max = Math.max(...dataPoints);
+    const range = (max - min) || 1;
+
+    const coords = dataPoints.map((val, idx) => {
+      const x = pad + (idx / (dataPoints.length - 1)) * (width - 2 * pad);
+      const y = height - pad - ((val - min) / range) * (height - 2 * pad);
+      return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)) };
+    });
+
+    // Build smooth bezier path
+    let pathD = `M ${coords[0].x} ${coords[0].y}`;
+    for (let i = 0; i < coords.length - 1; i++) {
+      const p0 = i > 0 ? coords[i - 1] : coords[i];
+      const p1 = coords[i];
+      const p2 = coords[i + 1];
+      const p3 = i < coords.length - 2 ? coords[i + 2] : p2;
+
+      const cp1x = (p1.x + (p2.x - p0.x) / 6).toFixed(1);
+      const cp1y = (p1.y + (p2.y - p0.y) / 6).toFixed(1);
+      const cp2x = (p2.x - (p3.x - p1.x) / 6).toFixed(1);
+      const cp2y = (p2.y - (p3.y - p1.y) / 6).toFixed(1);
+
+      pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+    }
+
+    const lastCoord = coords[coords.length - 1];
+    const fillD = `${pathD} L ${lastCoord.x} ${height} L ${coords[0].x} ${height} Z`;
+    const gradId = `sparkGrad_${uniqueId || Math.random().toString(36).slice(2, 7)}`;
+
+    return `
+      <svg viewBox="0 0 ${width} ${height}" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.32" />
+            <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0.0" />
+          </linearGradient>
+        </defs>
+        <path d="${fillD}" fill="url(#${gradId})" />
+        <path d="${pathD}" fill="none" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="${lastCoord.x}" cy="${lastCoord.y}" r="2.5" fill="${strokeColor}" />
+      </svg>
+    `;
+  }
+
   /* ------------------------------------------------------- summary cards */
 
   function renderSummary(transactions) {
     const totals = FT.computeTotals(transactions);
     const thisMonth = FT.computeTotals(FT.filterByPeriod(transactions, 'this-month'));
     const lastMonth = FT.computeTotals(FT.filterByPeriod(transactions, 'last-month'));
+    const recent6 = FT.monthlySeries(transactions, FT.recentMonthKeys(6));
+
+    const balanceHistory = recent6.map(m => m.income - m.expenses);
+    const incomeHistory = recent6.map(m => m.income);
+    const expenseHistory = recent6.map(m => m.expenses);
+    const savingsHistory = recent6.map(m => m.income - m.expenses);
 
     const cards = [
       {
         label: 'Total Balance', value: totals.balance, icon: ICONS.balance, mod: 'balance',
+        color: '#3b82f6', history: balanceHistory,
         meta: `${trendMarkup(changePct(thisMonth.balance, lastMonth.balance))} <span>vs last month</span>`
       },
       {
         label: 'Total Income', value: totals.income, icon: ICONS.income, mod: 'income',
+        color: '#10b981', history: incomeHistory,
         meta: `${trendMarkup(changePct(thisMonth.income, lastMonth.income))} <span>vs last month</span>`
       },
       {
         label: 'Total Expenses', value: totals.expenses, icon: ICONS.expense, mod: 'expense',
+        color: '#f43f5e', history: expenseHistory,
         meta: `${trendMarkup(changePct(thisMonth.expenses, lastMonth.expenses), true)} <span>vs last month</span>`
       },
       {
         label: 'Total Savings', value: totals.savings, icon: ICONS.savings, mod: 'savings',
+        color: '#f59e0b', history: savingsHistory,
         meta: `<span>Savings rate <strong>${totals.savingsRate.toFixed(1)}%</strong></span>`
       }
     ];
 
     FT.$('#summaryCards').innerHTML = cards.map((card) => `
-      <article class="card card--hover stat-card">
+      <article class="card card--hover stat-card stat-card--${card.mod}">
+        <div class="stat-card__glow" aria-hidden="true"></div>
         <div class="stat-card__top">
           <span class="stat-card__label">${card.label}</span>
           <span class="stat-card__icon stat-card__icon--${card.mod}" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="${card.icon}"/></svg>
           </span>
         </div>
-        <p class="stat-card__value">${FT.formatCurrency(card.value)}</p>
+        <div class="stat-card__middle">
+          <p class="stat-card__value" id="statVal_${card.mod}">${FT.formatCurrency(card.value)}</p>
+          <div class="stat-card__sparkline" title="6-month trend">
+            ${generateSparklineSvg(card.history, card.color, card.mod)}
+          </div>
+        </div>
         <p class="stat-card__meta">${card.meta}</p>
       </article>`).join('');
+
+    // Trigger smooth count-up animations for each stat card
+    cards.forEach((card) => {
+      const el = FT.$(`#statVal_${card.mod}`);
+      if (el) FT.animateCountUp(el, card.value);
+    });
 
     const sub = FT.$('[data-welcome-sub]');
     if (sub) {
@@ -122,8 +199,13 @@
     const monthTx = FT.filterByPeriod(transactions, 'this-month');
     const data = FT.groupByCategory(monthTx.length ? monthTx : transactions, 'expense').slice(0, 7);
     const legend = FT.$('#categoryLegend');
+    const donutCenter = FT.$('#donutCenterStats');
+    const donutLabel = FT.$('#donutCenterLabel');
+    const donutVal = FT.$('#donutCenterVal');
+    const donutSub = FT.$('#donutCenterSub');
 
     if (!data.length) {
+      if (donutCenter) donutCenter.style.display = 'none';
       FT.showChartEmpty('categoryChart', {
         title: 'No expenses yet',
         message: 'Category insights appear once you record an expense.',
@@ -134,7 +216,16 @@
       return;
     }
 
+    if (donutCenter) donutCenter.style.display = 'flex';
     const total = data.reduce((sum, d) => sum + d.total, 0);
+
+    const resetDonutCenter = () => {
+      if (donutLabel) donutLabel.textContent = 'Total Spent';
+      if (donutVal) donutVal.textContent = FT.formatCurrency(total);
+      if (donutSub) donutSub.textContent = `${data.length} ${data.length === 1 ? 'category' : 'categories'}`;
+    };
+    resetDonutCenter();
+
     FT.renderChart('categoryChart', {
       type: 'doughnut',
       data: {
@@ -143,11 +234,11 @@
           data: data.map((d) => d.total),
           backgroundColor: data.map((d) => FT.categoryColor(d.category)),
           borderWidth: 0,
-          hoverOffset: 10
+          hoverOffset: 8
         }]
       },
       options: {
-        cutout: '66%',
+        cutout: '74%',
         onClick: (evt, elements) => {
           if (elements.length > 0) {
             const idx = elements[0].index;
@@ -157,6 +248,16 @@
         onHover: (event, chartElement) => {
           const target = event.native ? event.native.target : event.chart?.canvas;
           if (target) target.style.cursor = chartElement.length ? 'pointer' : 'default';
+          if (chartElement && chartElement.length > 0) {
+            const idx = chartElement[0].index;
+            if (data[idx]) {
+              if (donutLabel) donutLabel.textContent = data[idx].category;
+              if (donutVal) donutVal.textContent = FT.formatCurrency(data[idx].total);
+              if (donutSub) donutSub.textContent = `${((data[idx].total / total) * 100).toFixed(0)}% of total`;
+            }
+          } else {
+            resetDonutCenter();
+          }
         },
         plugins: {
           legend: { display: false },
@@ -412,10 +513,31 @@
 
   function renderDashboard() {
     const transactions = FTStorage.getTransactions();
+
+    // Time-of-day personalized greeting
+    const hour = new Date().getHours();
+    let greeting = 'Good evening';
+    let greetingIcon = '🌙';
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good morning';
+      greetingIcon = '☀️';
+    } else if (hour >= 12 && hour < 18) {
+      greeting = 'Good afternoon';
+      greetingIcon = '🌤️';
+    }
+
+    const user = FTStorage.getCurrentUser() || FTStorage.getSettings();
+    const rawName = user?.name || 'there';
+    const firstName = rawName.split(' ')[0];
+    const welcomeHeading = FT.$('#welcomeHeading');
+    if (welcomeHeading) {
+      welcomeHeading.innerHTML = `${greeting}, <span class="welcome-user">${FT.escapeHtml(firstName)}</span> <span style="font-style:normal;">${greetingIcon}</span>`;
+    }
+
     const monthLabelEl = FT.$('[data-current-month]');
     if (monthLabelEl) {
       const monthTotals = FT.computeTotals(FT.filterByPeriod(transactions, 'this-month'));
-      monthLabelEl.textContent = `${monthTotals.balance >= 0 ? '+' : ''}${FT.formatCurrency(monthTotals.balance)}`;
+      FT.animateCountUp(monthLabelEl, monthTotals.balance, { signed: true });
       monthLabelEl.classList.toggle('welcome__month-value--positive', monthTotals.balance >= 0);
       monthLabelEl.classList.toggle('welcome__month-value--negative', monthTotals.balance < 0);
     }

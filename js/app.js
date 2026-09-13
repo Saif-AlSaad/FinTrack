@@ -126,6 +126,41 @@ const FT = (() => {
       maximumFractionDigits: decimals
     });
 
+  /**
+   * Smoothly animates a numeric element from 0 to target value using easeOutQuart.
+   */
+  function animateCountUp(element, endVal, { duration = 750, decimals = 2, signed = false, isCurrency = true } = {}) {
+    if (!element) return;
+    const target = Number(endVal) || 0;
+    const startVal = 0;
+    const startTime = performance.now();
+
+    function frame(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutQuart
+      const ease = 1 - Math.pow(1 - progress, 4);
+      const current = startVal + (target - startVal) * ease;
+
+      if (isCurrency) {
+        element.textContent = formatCurrency(current, { decimals, signed });
+      } else {
+        element.textContent = formatNumber(current, decimals);
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        if (isCurrency) {
+          element.textContent = formatCurrency(target, { decimals, signed });
+        } else {
+          element.textContent = formatNumber(target, decimals);
+        }
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
   function formatDate(isoDate, style = 'medium') {
     const date = new Date(`${isoDate}T00:00:00`);
     if (Number.isNaN(date.getTime())) return isoDate || '—';
@@ -512,15 +547,15 @@ const FT = (() => {
       .join('') || 'FT';
   }
 
-  /** Compress + resize a user-selected image into a base64 JPEG data URL.
-   *  Keeps LocalStorage usage small (typically 20–60 KB). */
-  function compressImage(file, { maxSize = 256, quality = 0.85 } = {}) {
+  /** Compress + resize a user-selected image into a square base64 JPEG data URL.
+   *  Applies a centered 1:1 crop to ensure the photo sits perfectly in circular avatars. */
+  function compressImage(file, { maxSize = 256, quality = 0.88 } = {}) {
     return new Promise((resolve, reject) => {
       if (!file || !file.type || !file.type.startsWith('image/')) {
         return reject(new Error('Please choose a valid image file.'));
       }
-      if (file.size > 5 * 1024 * 1024) {
-        return reject(new Error('Image must be smaller than 5 MB.'));
+      if (file.size > 10 * 1024 * 1024) {
+        return reject(new Error('Image must be smaller than 10 MB.'));
       }
       const reader = new FileReader();
       reader.onerror = () => reject(new Error('Could not read that file.'));
@@ -529,14 +564,17 @@ const FT = (() => {
         img.onerror = () => reject(new Error('This file is not a readable image.'));
         img.onload = () => {
           try {
-            const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-            const w = Math.max(1, Math.round(img.width * scale));
-            const h = Math.max(1, Math.round(img.height * scale));
+            const minDim = Math.min(img.naturalWidth || img.width, img.naturalHeight || img.height);
+            const sx = ((img.naturalWidth || img.width) - minDim) / 2;
+            const sy = ((img.naturalHeight || img.height) - minDim) / 2;
+            const outSize = Math.min(minDim, maxSize);
             const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
+            canvas.width = outSize;
+            canvas.height = outSize;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, outSize, outSize);
             resolve(canvas.toDataURL('image/jpeg', quality));
           } catch (err) {
             reject(new Error('Unable to process that image.'));
@@ -605,16 +643,19 @@ const FT = (() => {
   function applyChartDefaults() {
     if (typeof Chart === 'undefined') return;
     const theme = chartTheme();
-    Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
+    Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif";
     Chart.defaults.font.size = 12;
     Chart.defaults.color = theme.text;
     Chart.defaults.plugins.legend.labels.usePointStyle = true;
     Chart.defaults.plugins.legend.labels.boxWidth = 8;
     Chart.defaults.plugins.legend.labels.padding = 16;
-    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15,23,42,.92)';
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(9, 13, 22, 0.94)';
+    Chart.defaults.plugins.tooltip.borderColor = 'rgba(255, 255, 255, 0.12)';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
     Chart.defaults.plugins.tooltip.padding = 12;
     Chart.defaults.plugins.tooltip.cornerRadius = 10;
-    Chart.defaults.plugins.tooltip.titleFont = { weight: '600' };
+    Chart.defaults.plugins.tooltip.titleFont = { family: "'Plus Jakarta Sans', sans-serif", weight: '700', size: 13 };
+    Chart.defaults.plugins.tooltip.bodyFont = { family: "'JetBrains Mono', monospace", size: 12 };
     Chart.defaults.maintainAspectRatio = false;
   }
 
@@ -970,7 +1011,8 @@ const FT = (() => {
     chartTheme, renderChart, showChartEmpty, restoreChartCanvas, currencyTick, emptyState,
     getInitials, compressImage, renderProfile, handleLogout,
     showShortcutsModal, handleQuickAdd,
-    getCategories, goalProgress
+    getCategories, goalProgress,
+    animateCountUp
   };
 })();
 
