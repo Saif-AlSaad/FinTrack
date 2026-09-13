@@ -283,41 +283,75 @@
       const user = FTStorage.getCurrentUser() || {};
       const userName = settings.name || user.name || 'FinTrack User';
       const userEmail = user.email || 'user@fintrack.app';
-      const periodName = PERIOD_LABELS[state.period] || 'Financial Report';
+      const periodName = PERIOD_LABELS[state.period] || 'Monthly Financial Report';
 
       // Capture Chart Canvas images cleanly
       const incExpCanvas = document.getElementById('reportIncomeExpense');
       const catCanvas = document.getElementById('reportCategory');
-      const incExpImg = incExpCanvas ? incExpCanvas.toDataURL('image/png') : null;
-      const catImg = catCanvas ? catCanvas.toDataURL('image/png') : null;
+      const incExpImg = incExpCanvas && incExpCanvas.width > 0 ? incExpCanvas.toDataURL('image/png') : null;
+      const catImg = catCanvas && catCanvas.width > 0 ? catCanvas.toDataURL('image/png') : null;
 
-      // Group categories
-      const categories = FT.groupByCategory(list, 'expense');
-      const totalExpense = categories.reduce((sum, d) => sum + d.total, 0);
+      // Expense categories breakdown
+      const expenseCategories = FT.groupByCategory(list, 'expense');
+      const totalExpense = expenseCategories.reduce((sum, d) => sum + d.total, 0);
 
-      const categoryRows = categories.length ? categories.map((c) => {
+      const expenseCategoryRows = expenseCategories.length ? expenseCategories.map((c) => {
         const share = totalExpense > 0 ? (c.total / totalExpense) * 100 : 0;
         const color = FT.categoryColor(c.category);
         return `
           <tr>
-            <td>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="width: 8px; height: 8px; border-radius: 50%; background: ${color}; display: inline-block;"></span>
-                <span style="font-weight: 600;">${FT.escapeHtml(c.category)}</span>
+            <td style="padding: 7px 10px; border-bottom: 1px solid #f1f5f9;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: ${color}; display: inline-block; flex: none;"></span>
+                <span style="font-weight: 600; color: #0f172a;">${FT.escapeHtml(c.category)}</span>
               </div>
             </td>
-            <td style="text-align: right; font-weight: 700; font-variant-numeric: tabular-nums;">${FT.formatCurrency(c.total)}</td>
-            <td style="text-align: right; font-weight: 600; font-size: .72rem; color: #64748b;">${share.toFixed(1)}%</td>
-            <td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: #dc2626; border-bottom: 1px solid #f1f5f9;">
+              -${FT.formatCurrency(c.total)}
+            </td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 600; font-size: 11px; color: #64748b; border-bottom: 1px solid #f1f5f9;">
+              ${share.toFixed(1)}%
+            </td>
+            <td style="padding: 7px 10px; border-bottom: 1px solid #f1f5f9;">
               <div class="pdf-bar-wrap">
                 <div class="pdf-bar-fill" style="width: ${share}%; background: ${color};"></div>
               </div>
             </td>
           </tr>
         `;
-      }).join('') : '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 12px;">No expense records in this period</td></tr>';
+      }).join('') : '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 14px;">No expense records in this period</td></tr>';
 
-      // Top / All Transactions (up to 30)
+      // Income categories breakdown
+      const incomeCategories = FT.groupByCategory(list, 'income');
+      const totalIncome = incomeCategories.reduce((sum, d) => sum + d.total, 0);
+
+      const incomeCategoryRows = incomeCategories.length ? incomeCategories.map((c) => {
+        const share = totalIncome > 0 ? (c.total / totalIncome) * 100 : 0;
+        const color = FT.categoryColor(c.category);
+        return `
+          <tr>
+            <td style="padding: 7px 10px; border-bottom: 1px solid #f1f5f9;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: ${color}; display: inline-block; flex: none;"></span>
+                <span style="font-weight: 600; color: #0f172a;">${FT.escapeHtml(c.category)}</span>
+              </div>
+            </td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: #059669; border-bottom: 1px solid #f1f5f9;">
+              +${FT.formatCurrency(c.total)}
+            </td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 600; font-size: 11px; color: #64748b; border-bottom: 1px solid #f1f5f9;">
+              ${share.toFixed(1)}%
+            </td>
+            <td style="padding: 7px 10px; border-bottom: 1px solid #f1f5f9;">
+              <div class="pdf-bar-wrap">
+                <div class="pdf-bar-fill" style="width: ${share}%; background: ${color};"></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('') : '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 14px;">No income records in this period</td></tr>';
+
+      // Top Transactions (up to 30)
       const sortedTx = [...list].sort((a, b) => new Date(b.date) - new Date(a.date));
       const displayTx = sortedTx.slice(0, 30);
       const txRows = displayTx.length ? displayTx.map((t) => {
@@ -326,37 +360,41 @@
         const sign = isIncome ? '+' : '-';
         return `
           <tr>
-            <td style="font-variant-numeric: tabular-nums; white-space: nowrap; color: #64748b; font-size: .72rem;">${FT.formatDate(t.date)}</td>
-            <td style="font-weight: 600;">${FT.escapeHtml(t.title)}</td>
-            <td>${FT.escapeHtml(t.category)}</td>
-            <td><span class="pdf-type-badge ${badgeClass}">${t.type}</span></td>
-            <td style="text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: ${isIncome ? '#059669' : '#0f172a'};">
+            <td style="padding: 6px 8px; font-variant-numeric: tabular-nums; white-space: nowrap; color: #64748b; font-size: 11px; border-bottom: 1px solid #f1f5f9;">${FT.formatDate(t.date)}</td>
+            <td style="padding: 6px 8px; font-weight: 600; color: #0f172a; border-bottom: 1px solid #f1f5f9;">${FT.escapeHtml(t.title)}</td>
+            <td style="padding: 6px 8px; color: #475569; border-bottom: 1px solid #f1f5f9;">${FT.escapeHtml(t.category)}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9;"><span class="pdf-type-badge ${badgeClass}">${t.type}</span></td>
+            <td style="padding: 6px 8px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: ${isIncome ? '#059669' : '#0f172a'}; border-bottom: 1px solid #f1f5f9;">
               ${sign}${FT.formatCurrency(t.amount)}
             </td>
           </tr>
         `;
-      }).join('') : '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 12px;">No transactions recorded for this period</td></tr>';
+      }).join('') : '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 14px;">No transactions recorded for this period</td></tr>';
 
       // Financial Insights
       const insightsList = [];
       const months = Math.max(1, new Set(list.map((t) => FT.monthKey(t.date))).size);
       if (list.length) {
-        insightsList.push(`Earned <strong>${FT.formatCurrency(totals.income)}</strong> and spent <strong>${FT.formatCurrency(totals.expenses)}</strong>, netting <strong>${FT.formatCurrency(totals.balance)}</strong> in total savings.`);
-        if (categories[0]) {
-          const share = totals.expenses > 0 ? (categories[0].total / totals.expenses) * 100 : 0;
-          insightsList.push(`<strong>${categories[0].category}</strong> represents your highest expense category at ${share.toFixed(1)}% of all spending.`);
+        insightsList.push(`Earned a total of <strong>${FT.formatCurrency(totals.income)}</strong> and spent <strong>${FT.formatCurrency(totals.expenses)}</strong>, netting <strong>${FT.formatCurrency(totals.balance)}</strong> in total savings.`);
+        if (expenseCategories[0]) {
+          const share = totals.expenses > 0 ? (expenseCategories[0].total / totals.expenses) * 100 : 0;
+          insightsList.push(`<strong>${expenseCategories[0].category}</strong> is your top spending category at ${share.toFixed(1)}% of total expenses.`);
         }
-        insightsList.push(`Average monthly expenditure is <strong>${FT.formatCurrency(totals.expenses / months, { decimals: 0 })}</strong>.`);
+        if (incomeCategories[0]) {
+          const incShare = totals.income > 0 ? (incomeCategories[0].total / totals.income) * 100 : 0;
+          insightsList.push(`<strong>${incomeCategories[0].category}</strong> is your primary income stream at ${incShare.toFixed(1)}% of total earnings.`);
+        }
+        insightsList.push(`Average monthly expenditure is <strong>${FT.formatCurrency(totals.expenses / months, { decimals: 0 })}</strong> across ${months} month${months > 1 ? 's' : ''}.`);
         insightsList.push(totals.savingsRate >= 20
-          ? `Savings rate is <strong>${totals.savingsRate.toFixed(1)}%</strong>, exceeding the recommended 20% financial independence threshold.`
-          : `Savings rate is <strong>${totals.savingsRate.toFixed(1)}%</strong>. Increasing monthly savings toward 20% is suggested.`);
+          ? `Your savings rate of <strong>${totals.savingsRate.toFixed(1)}%</strong> exceeds the recommended 20% benchmark.`
+          : `Your savings rate is <strong>${totals.savingsRate.toFixed(1)}%</strong>. Increasing monthly savings toward 20% is recommended.`);
       } else {
         insightsList.push('No transactions found in this period. Add transactions to generate financial health insights.');
       }
 
       const insightsHtml = insightsList.map((txt) => `
         <div class="pdf-insight-row">
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span style="color: #3b82f6; font-size: 14px; line-height: 1;">•</span>
           <span>${txt}</span>
         </div>
       `).join('');
@@ -373,7 +411,7 @@
         <div class="pdf-header">
           <div class="pdf-brand">
             <div class="pdf-brand__icon">
-              <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 7.9 20.6 6.5l-7.1 7.1-4-4L2 17z"/><path d="M2 20h20v2H2z"/></svg>
+              <span style="color: #ffffff; font-weight: 800; font-size: 18px;">FT</span>
             </div>
             <div>
               <div class="pdf-brand__name">FinTrack</div>
@@ -382,69 +420,91 @@
           </div>
           <div class="pdf-meta">
             <div class="pdf-badge">${periodName}</div>
-            <div>Client: <strong>${FT.escapeHtml(userName)}</strong></div>
-            <div style="font-size: .72rem; color: #64748b;">${FT.escapeHtml(userEmail)}</div>
-            <div style="font-size: .68rem; color: #94a3b8; margin-top: 2px;">Generated: ${genTimestamp}</div>
+            <div>Account: <strong>${FT.escapeHtml(userName)}</strong></div>
+            <div style="font-size: 11px; color: #64748b;">${FT.escapeHtml(userEmail)}</div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Generated: ${genTimestamp}</div>
           </div>
         </div>
 
+        <!-- Monthly Financial Summary KPIs -->
         <div class="pdf-section">
-          <div class="pdf-section-title">Executive Summary</div>
+          <div class="pdf-section-title">Monthly Financial Summary</div>
           <div class="pdf-kpi-grid">
             <div class="pdf-kpi pdf-kpi--income">
               <div class="pdf-kpi__label">Total Income</div>
-              <div class="pdf-kpi__val">${FT.formatCurrency(totals.income)}</div>
-              <div class="pdf-kpi__hint">${list.filter((t) => t.type === 'income').length} entries</div>
+              <div class="pdf-kpi__val" style="color: #059669;">+${FT.formatCurrency(totals.income)}</div>
+              <div class="pdf-kpi__hint">${list.filter((t) => t.type === 'income').length} income entries</div>
             </div>
             <div class="pdf-kpi pdf-kpi--expense">
-              <div class="pdf-kpi__label">Total Expenses</div>
-              <div class="pdf-kpi__val">${FT.formatCurrency(totals.expenses)}</div>
-              <div class="pdf-kpi__hint">${list.filter((t) => t.type === 'expense').length} entries</div>
+              <div class="pdf-kpi__label">Total Expense</div>
+              <div class="pdf-kpi__val" style="color: #dc2626;">-${FT.formatCurrency(totals.expenses)}</div>
+              <div class="pdf-kpi__hint">${list.filter((t) => t.type === 'expense').length} expense entries</div>
             </div>
             <div class="pdf-kpi pdf-kpi--balance">
-              <div class="pdf-kpi__label">Net Savings</div>
-              <div class="pdf-kpi__val">${FT.formatCurrency(totals.balance)}</div>
-              <div class="pdf-kpi__hint">Net cash flow</div>
+              <div class="pdf-kpi__label">Net Balance</div>
+              <div class="pdf-kpi__val" style="color: ${totals.balance >= 0 ? '#2563eb' : '#dc2626'};">${totals.balance >= 0 ? '+' : ''}${FT.formatCurrency(totals.balance)}</div>
+              <div class="pdf-kpi__hint">Net cash flow for period</div>
             </div>
             <div class="pdf-kpi pdf-kpi--rate">
               <div class="pdf-kpi__label">Savings Rate</div>
-              <div class="pdf-kpi__val">${totals.savingsRate.toFixed(1)}%</div>
-              <div class="pdf-kpi__hint">${totals.savingsRate >= 20 ? 'Target achieved (≥20%)' : 'Target: 20%'}</div>
+              <div class="pdf-kpi__val" style="color: #7c3aed;">${totals.savingsRate.toFixed(1)}%</div>
+              <div class="pdf-kpi__hint">${totals.savingsRate >= 20 ? 'Target achieved (≥20%)' : 'Goal: 20%'}</div>
             </div>
           </div>
         </div>
 
+        <!-- Category-Wise Expense Table -->
         <div class="pdf-section" style="page-break-inside: avoid;">
-          <div class="pdf-section-title">Financial Charts & Analytics</div>
-          <div class="pdf-charts-grid">
-            <div class="pdf-chart-card">
-              <div class="pdf-chart-card__title">Monthly Income vs Expenses</div>
-              ${incExpImg ? `<img src="${incExpImg}" class="pdf-chart-img" alt="Income vs Expenses Chart">` : '<p style="font-size: .75rem; color: #94a3b8; padding: 20px; text-align: center;">No trend data</p>'}
-            </div>
-            <div class="pdf-chart-card">
-              <div class="pdf-chart-card__title">Expenses by Category</div>
-              ${catImg ? `<img src="${catImg}" class="pdf-chart-img" alt="Expense Category Doughnut Chart">` : '<p style="font-size: .75rem; color: #94a3b8; padding: 20px; text-align: center;">No category data</p>'}
-            </div>
-          </div>
-        </div>
-
-        <div class="pdf-section" style="page-break-inside: avoid;">
-          <div class="pdf-section-title">Expense Breakdown by Category</div>
+          <div class="pdf-section-title">Category-Wise Expense Breakdown</div>
           <table class="pdf-table">
             <thead>
               <tr>
                 <th style="width: 32%;">Category</th>
-                <th style="text-align: right; width: 22%;">Amount</th>
+                <th style="text-align: right; width: 22%;">Total Spent</th>
                 <th style="text-align: right; width: 16%;">Share</th>
                 <th style="width: 30%;">Distribution</th>
               </tr>
             </thead>
             <tbody>
-              ${categoryRows}
+              ${expenseCategoryRows}
             </tbody>
           </table>
         </div>
 
+        <!-- Category-Wise Income Table -->
+        <div class="pdf-section" style="page-break-inside: avoid;">
+          <div class="pdf-section-title">Category-Wise Income Breakdown</div>
+          <table class="pdf-table">
+            <thead>
+              <tr>
+                <th style="width: 32%;">Category</th>
+                <th style="text-align: right; width: 22%;">Total Earned</th>
+                <th style="text-align: right; width: 16%;">Share</th>
+                <th style="width: 30%;">Distribution</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${incomeCategoryRows}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="pdf-section" style="page-break-inside: avoid;">
+          <div class="pdf-section-title">Visual Analytics</div>
+          <div class="pdf-charts-grid">
+            <div class="pdf-chart-card">
+              <div class="pdf-chart-card__title">Monthly Income vs Expenses</div>
+              ${incExpImg ? `<img src="${incExpImg}" class="pdf-chart-img" alt="Income vs Expenses Chart">` : '<p style="font-size: 11px; color: #94a3b8; padding: 20px; text-align: center;">No trend data available</p>'}
+            </div>
+            <div class="pdf-chart-card">
+              <div class="pdf-chart-card__title">Spending by Category</div>
+              ${catImg ? `<img src="${catImg}" class="pdf-chart-img" alt="Expense Category Doughnut Chart">` : '<p style="font-size: 11px; color: #94a3b8; padding: 20px; text-align: center;">No category data available</p>'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Period Transactions Detail -->
         <div class="pdf-section">
           <div class="pdf-section-title">Transactions Ledger (${displayTx.length}${sortedTx.length > displayTx.length ? ` of ${sortedTx.length}` : ''})</div>
           <table class="pdf-table">
@@ -463,34 +523,35 @@
           </table>
         </div>
 
+        <!-- Financial Insights -->
         <div class="pdf-section" style="page-break-inside: avoid;">
-          <div class="pdf-section-title">Financial Insights & Recommendations</div>
+          <div class="pdf-section-title">Financial Insights & Observations</div>
           <div class="pdf-insights-box">
             ${insightsHtml}
           </div>
         </div>
 
+        <!-- Footer -->
         <div class="pdf-footer">
           <div>FinTrack Money Manager · Confidential Financial Summary</div>
           <div>Strictly Private & Client-Side · Generated securely in browser</div>
         </div>
       `;
 
-      document.body.appendChild(template);
-
       // Check if html2pdf is available
       if (typeof window.html2pdf === 'function') {
         const dateStamp = new Date().toISOString().slice(0, 10);
-        const filename = `FinTrack-Report-${state.period}-${dateStamp}.pdf`;
+        const filename = `FinTrack-Financial-Report-${state.period}-${dateStamp}.pdf`;
         const opt = {
-          margin: [8, 8, 10, 8],
+          margin: [10, 10, 12, 10],
           filename: filename,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: {
             scale: 2,
             useCORS: true,
             letterRendering: true,
-            logging: false
+            logging: false,
+            backgroundColor: '#ffffff'
           },
           jsPDF: {
             unit: 'mm',
@@ -501,11 +562,9 @@
         };
 
         await window.html2pdf().set(opt).from(template).save();
-        template.remove();
         FT.toast('PDF report downloaded successfully!', 'success', { force: true });
       } else {
         // Fallback to browser print
-        template.remove();
         FT.toast('Opening browser print dialog (Save as PDF)...', 'info', { force: true });
         window.print();
       }

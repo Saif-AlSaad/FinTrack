@@ -73,18 +73,20 @@
   cursor: wait;
 }
 
-/* Dedicated off-screen PDF export template container */
+/* Dedicated PDF export template container */
 .pdf-render-wrapper {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  width: 780px;
+  width: 100%;
+  max-width: 800px;
   background: #ffffff !important;
   color: #0f172a !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   font-size: 13px;
   line-height: 1.5;
   padding: 24px 30px 28px;
+  box-sizing: border-box;
+}
+
+.pdf-render-wrapper * {
   box-sizing: border-box;
 }
 
