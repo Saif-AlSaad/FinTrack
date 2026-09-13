@@ -272,7 +272,7 @@
   /* ----------------------------------------------------- budget form logic */
 
   function setBudgetError(id, msg) {
-    const el = els[id] || FT.$(`#${id}`);
+    const el = els[id] || (id === 'budgetMonth' ? els.monthField : null) || FT.$(`#${id}`);
     const err = FT.$(`#err${id.charAt(0).toUpperCase() + id.slice(1)}`);
     if (el) el.classList.toggle('is-invalid', Boolean(msg));
     if (err) err.textContent = msg || '';
@@ -477,6 +477,7 @@
       modal: FT.$('#budgetModal'),
       modalTitle: FT.$('#budgetModalTitle'),
       form: FT.$('#budgetForm'),
+      budgetId: FT.$('#budgetId'),
       category: FT.$('#budgetCategory'),
       amount: FT.$('#budgetAmount'),
       monthField: FT.$('#budgetMonthField'),
@@ -510,12 +511,20 @@
 
     els.monthInput.value = state.month;
 
-    // Deep link: ?tab=goals
+    // Deep link: ?tab=goals and ?action=new
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'goals') {
       switchTab('goals');
+      if (params.get('action') === 'new') {
+        openGoalForm();
+        window.history.replaceState({}, '', 'budgets.html?tab=goals');
+      }
     } else {
       renderBudgets();
+      if (params.get('action') === 'new') {
+        openBudgetForm();
+        window.history.replaceState({}, '', 'budgets.html');
+      }
     }
 
     // Tab buttons

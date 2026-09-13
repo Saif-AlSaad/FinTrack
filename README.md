@@ -121,28 +121,6 @@ FinTrack/
 └── README.md
 ```
 
-### Key JavaScript APIs
-
-```js
-// storage.js
-FTStorage.getTransactions()          FTStorage.saveTransactions(list)
-FTStorage.addTransaction(tx)         FTStorage.updateTransaction(id, patch)
-FTStorage.deleteTransaction(id)      FTStorage.getTransaction(id)
-FTStorage.getBudgets()               FTStorage.saveBudgets(list)
-FTStorage.addBudget(b)               FTStorage.updateBudget(id, patch)
-FTStorage.deleteBudget(id)           FTStorage.getSettings()
-FTStorage.saveSettings(patch)        FTStorage.seedSampleData(force)
-FTStorage.exportData()               FTStorage.importData(json)
-
-// app.js
-FT.computeTotals(transactions)       // { income, expenses, balance, savings, savingsRate }
-FT.groupByCategory(list, type)       FT.monthlySeries(list, monthKeys)
-FT.filterByPeriod(list, period)      FT.budgetProgress(budget, transactions)
-FT.formatCurrency(value)             FT.formatDate(iso)
-FT.toast(message, type)              FT.confirmAction({ title, message })
-FT.renderChart(canvasId, config)     FT.emptyState({ title, message, actionLabel })
-```
-
 ### Financial formulas
 
 ```

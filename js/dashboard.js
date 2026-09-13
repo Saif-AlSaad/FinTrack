@@ -386,7 +386,7 @@
         title: 'No budgets for this month',
         message: 'Create category budgets to monitor your spending limits.',
         actionLabel: 'Create Budget',
-        actionHref: 'budgets.html'
+        actionHref: 'budgets.html?action=new'
       });
       return;
     }
@@ -488,7 +488,7 @@
         title: 'No active savings goals',
         message: 'Set target buckets for vacations, emergency funds, or big purchases.',
         actionLabel: 'Create Goal',
-        actionHref: 'budgets.html?tab=goals'
+        actionHref: 'budgets.html?tab=goals&action=new'
       });
       return;
     }
