@@ -1,9 +1,10 @@
 /* ==========================================================================
    FinTrack — sw.js
    Service Worker for offline support and asset caching.
+   Uses Network-First for local HTML/CSS/JS so new releases show instantly.
    ========================================================================== */
 
-const CACHE_NAME = 'fintrack-v2.2';
+const CACHE_NAME = 'fintrack-v2.5';
 
 const STATIC_ASSETS = [
   './',
@@ -32,16 +33,18 @@ const STATIC_ASSETS = [
   'js/vendor/html2pdf.bundle.min.js',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'
 ];
 
 self.addEventListener('install', (event) => {
+  // Immediately take over to prevent stale caches
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('[ServiceWorker] Some assets could not be pre-cached:', err);
+        console.warn('[ServiceWorker] Pre-cache partial warning:', err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -49,7 +52,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => {
+          console.log('[ServiceWorker] Removing obsolete cache:', key);
+          return caches.delete(key);
+        })
       );
     }).then(() => self.clients.claim())
   );
@@ -61,35 +67,53 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Bypass external API calls (e.g. Disify email verification)
+  // Bypass external APIs
   if (url.hostname.includes('disify.com')) {
     return;
   }
 
+  // Network-First for local assets and HTML navigations so code updates show immediately
+  const isLocal = url.origin === location.origin || request.mode === 'navigate';
+
+  if (isLocal) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(request).then((cached) => {
+            if (cached) return cached;
+            if (request.mode === 'navigate') return caches.match('index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-First / Stale-While-Revalidate for external fonts and CDN scripts
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Fetch and update cache in background (Stale-While-Revalidate)
         fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
+          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
             caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse));
           }
-        }).catch(() => {/* offline */});
+        }).catch(() => {});
         return cachedResponse;
       }
 
       return fetch(request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'opaque') {
+        if (!networkResponse || (networkResponse.status !== 200 && networkResponse.type !== 'opaque')) {
           return networkResponse;
         }
         const responseClone = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
         return networkResponse;
-      }).catch(() => {
-        // Fallback to index.html for navigation requests when offline
-        if (request.mode === 'navigate') {
-          return caches.match('index.html');
-        }
       });
     })
   );
