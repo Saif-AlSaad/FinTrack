@@ -318,6 +318,53 @@
     FT.openModal(els.viewModal);
   }
 
+  /* ------------------------------------------------------------- export */
+
+  function exportToCsv() {
+    const list = getVisibleTransactions();
+    if (!list.length) {
+      FT.toast('No transactions available to export.', 'warning');
+      return;
+    }
+
+    const currency = FT.getSettings().currency || 'BDT';
+    const headers = ['ID', 'Date', 'Title', 'Type', 'Category', 'Amount', 'Currency', 'Description'];
+    const rows = [headers.join(',')];
+
+    const escapeCsv = (val) => {
+      const s = String(val ?? '').replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    list.forEach((tx) => {
+      rows.push([
+        escapeCsv(tx.id),
+        escapeCsv(tx.date),
+        escapeCsv(tx.title),
+        escapeCsv(tx.type),
+        escapeCsv(tx.category),
+        Number(tx.amount || 0).toFixed(2),
+        escapeCsv(currency),
+        escapeCsv(tx.description || '')
+      ].join(','));
+    });
+
+    const csvContent = rows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const isFiltered = list.length !== FTStorage.getTransactions().length;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `fintrack-${isFiltered ? 'filtered-' : ''}transactions-${dateStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    FT.toast(`Exported ${list.length} transaction${list.length === 1 ? '' : 's'} to CSV.`, 'success');
+  }
+
   /* ------------------------------------------------------------- wiring */
 
   function resetFilters() {
@@ -360,6 +407,7 @@
       categoryFilter: FT.$('#categoryFilter'),
       monthFilter: FT.$('#monthFilter'),
       sortSelect: FT.$('#sortSelect'),
+      exportCsvBtn: FT.$('#exportCsvBtn'),
       modal: FT.$('#txModal'),
       modalTitle: FT.$('#txModalTitle'),
       form: FT.$('#txForm'),
@@ -410,6 +458,9 @@
     els.monthFilter.addEventListener('change', (e) => { state.month = e.target.value; state.page = 1; renderTable(); });
     els.sortSelect.addEventListener('change', (e) => { state.sort = e.target.value; state.page = 1; renderTable(); });
     FT.$('#resetFilters').addEventListener('click', resetFilters);
+    if (els.exportCsvBtn) {
+      els.exportCsvBtn.addEventListener('click', exportToCsv);
+    }
 
     // Pagination events
     if (els.pageSizeSelect) {

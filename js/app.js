@@ -409,7 +409,7 @@ const FT = (() => {
     if (!modal || modal.hidden) return;
     modal.classList.remove('is-open');
     document.body.classList.remove('no-scroll');
-    setTimeout(() => { modal.hidden = true; }, 180);
+    setTimeout(() => { modal.hidden = true; }, 240);
     if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
   }
 

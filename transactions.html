@@ -115,8 +115,12 @@
           </div>
           <div class="filter-summary">
             <p id="resultCount" aria-live="polite">Showing all transactions</p>
-            <div class="row">
+            <div class="row" style="gap: .5rem; align-items: center;">
               <div class="filter-pills" id="activePills"></div>
+              <button class="btn btn--ghost btn--sm" type="button" id="exportCsvBtn" title="Export transactions to CSV file">
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="margin-right: 4px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                <span>Export CSV</span>
+              </button>
               <button class="btn btn--ghost btn--sm" type="button" id="resetFilters">Reset filters</button>
             </div>
           </div>

@@ -218,6 +218,50 @@
     FT.toast('Backup exported successfully.', 'success', { force: true });
   }
 
+  function exportTransactionsCsv() {
+    const list = FTStorage.getTransactions();
+    if (!list.length) {
+      FT.toast('No transactions available to export.', 'warning');
+      return;
+    }
+
+    const currency = FT.getSettings().currency || 'BDT';
+    const headers = ['ID', 'Date', 'Title', 'Type', 'Category', 'Amount', 'Currency', 'Description'];
+    const rows = [headers.join(',')];
+
+    const escapeCsv = (val) => {
+      const s = String(val ?? '').replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    list.forEach((tx) => {
+      rows.push([
+        escapeCsv(tx.id),
+        escapeCsv(tx.date),
+        escapeCsv(tx.title),
+        escapeCsv(tx.type),
+        escapeCsv(tx.category),
+        Number(tx.amount || 0).toFixed(2),
+        escapeCsv(currency),
+        escapeCsv(tx.description || '')
+      ].join(','));
+    });
+
+    const csvContent = rows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `fintrack-all-transactions-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    FT.toast(`Exported ${list.length} transaction${list.length === 1 ? '' : 's'} to CSV.`, 'success');
+  }
+
   /* -------------------------------------------------------------- actions */
 
   function handleSubmit(event) {
@@ -460,6 +504,10 @@
     });
 
     FT.$('#exportBtn').addEventListener('click', exportBackup);
+    const exportCsvBtn = FT.$('#exportCsvBtnSettings');
+    if (exportCsvBtn) {
+      exportCsvBtn.addEventListener('click', exportTransactionsCsv);
+    }
     FT.$('#importBtn').addEventListener('click', () => els.importFile.click());
     els.importFile.addEventListener('change', handleImport);
     FT.$('#sampleBtn').addEventListener('click', handleSampleData);
