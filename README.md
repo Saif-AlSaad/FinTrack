@@ -202,7 +202,7 @@ _Add your own captures to `docs/screenshots/` and they will render here:_
 - Savings goals with target dates and contribution tracking
 - CSV / PDF export of reports
 - Multi-account support (cash, bank, mobile wallet)
-- Optional cloud sync (Firebase / Supabase)
+- ✅ **Cloud Sync & Email Verification with Supabase** (see [SUPABASE_SETUP.md](SUPABASE_SETUP.md))
 - Multi-currency conversion with live exchange rates
 - PWA support with offline caching and installability
 - Charts for net-worth growth and cash-flow forecasting

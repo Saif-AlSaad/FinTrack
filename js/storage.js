@@ -95,8 +95,22 @@ const FTStorage = (() => {
   }
 
   /* -------------------------------------------------------- user auth */
+  function isCloudEnabled() {
+    return Boolean(window.FTSupabase && typeof FTSupabase.isConfigured === 'function' && FTSupabase.isConfigured());
+  }
+
+  /* -------------------------------------------------------- user auth */
   function getUsers() { return read(KEYS.users, []); }
   function saveUsers(list) { write(KEYS.users, list); }
+
+  function setSessionUser(user) {
+    if (!user || !user.email) return;
+    const cleanEmail = user.email.toLowerCase();
+    writeRaw('fintrack:session', cleanEmail);
+    if (user.name) {
+      saveSettings({ name: user.name });
+    }
+  }
 
   function registerUser(email, password, name) {
     const users = getUsers();
@@ -123,12 +137,22 @@ const FTStorage = (() => {
 
   function logoutUser() {
     removeRaw('fintrack:session');
+    if (window.FTSupabase && typeof FTSupabase.signOut === 'function') {
+      FTSupabase.signOut().catch(() => {});
+    }
   }
 
   function getCurrentUser() {
     const email = getActiveEmail();
     if (!email) return null;
-    return getUsers().find(u => u.email === email) || null;
+    const localUser = getUsers().find(u => u.email === email);
+    if (localUser) return localUser;
+    const settings = read(KEYS.settings, {});
+    return {
+      email,
+      name: settings.name || email.split('@')[0],
+      createdAt: new Date().toISOString()
+    };
   }
 
   function findUserByEmail(email) {
@@ -208,6 +232,9 @@ const FTStorage = (() => {
     const record = normalizeTransaction({ ...tx, id: uid('tx') });
     list.push(record);
     saveTransactions(list);
+    if (isCloudEnabled()) {
+      FTSupabase.syncTransaction(record, 'upsert').catch(e => console.warn('[Storage] Sync tx error:', e));
+    }
     return record;
   }
 
@@ -217,6 +244,9 @@ const FTStorage = (() => {
     if (index === -1) return null;
     list[index] = normalizeTransaction({ ...list[index], ...patch, id });
     saveTransactions(list);
+    if (isCloudEnabled()) {
+      FTSupabase.syncTransaction(list[index], 'upsert').catch(e => console.warn('[Storage] Sync tx error:', e));
+    }
     return list[index];
   }
 
@@ -224,7 +254,12 @@ const FTStorage = (() => {
     const list = getTransactions();
     const next = list.filter((tx) => tx.id !== id);
     const removed = next.length !== list.length;
-    if (removed) saveTransactions(next);
+    if (removed) {
+      saveTransactions(next);
+      if (isCloudEnabled()) {
+        FTSupabase.syncTransaction({ id }, 'delete').catch(e => console.warn('[Storage] Sync tx delete error:', e));
+      }
+    }
     return removed;
   }
 
@@ -259,6 +294,9 @@ const FTStorage = (() => {
     const record = normalizeBudget({ ...budget, id: uid('bg') });
     list.push(record);
     saveBudgets(list);
+    if (isCloudEnabled()) {
+      FTSupabase.syncBudget(record, 'upsert').catch(e => console.warn('[Storage] Sync budget error:', e));
+    }
     return record;
   }
 
@@ -268,14 +306,23 @@ const FTStorage = (() => {
     if (index === -1) return null;
     list[index] = normalizeBudget({ ...list[index], ...patch, id });
     saveBudgets(list);
+    if (isCloudEnabled()) {
+      FTSupabase.syncBudget(list[index], 'upsert').catch(e => console.warn('[Storage] Sync budget error:', e));
+    }
     return list[index];
   }
 
   function deleteBudget(id) {
     const list = getBudgets();
     const next = list.filter((b) => b.id !== id);
-    if (next.length !== list.length) saveBudgets(next);
-    return next.length !== list.length;
+    const removed = next.length !== list.length;
+    if (removed) {
+      saveBudgets(next);
+      if (isCloudEnabled()) {
+        FTSupabase.syncBudget({ id }, 'delete').catch(e => console.warn('[Storage] Sync budget delete error:', e));
+      }
+    }
+    return removed;
   }
 
   function budgetExists(category, month, ignoreId = null) {
@@ -313,6 +360,9 @@ const FTStorage = (() => {
     const record = normalizeGoal({ ...goal, id: uid('gl') });
     list.push(record);
     saveGoals(list);
+    if (isCloudEnabled()) {
+      FTSupabase.syncGoal(record, 'upsert').catch(e => console.warn('[Storage] Sync goal error:', e));
+    }
     return record;
   }
 
@@ -322,14 +372,23 @@ const FTStorage = (() => {
     if (index === -1) return null;
     list[index] = normalizeGoal({ ...list[index], ...patch, id });
     saveGoals(list);
+    if (isCloudEnabled()) {
+      FTSupabase.syncGoal(list[index], 'upsert').catch(e => console.warn('[Storage] Sync goal error:', e));
+    }
     return list[index];
   }
 
   function deleteGoal(id) {
     const list = getGoals();
     const next = list.filter((g) => g.id !== id);
-    if (next.length !== list.length) saveGoals(next);
-    return next.length !== list.length;
+    const removed = next.length !== list.length;
+    if (removed) {
+      saveGoals(next);
+      if (isCloudEnabled()) {
+        FTSupabase.syncGoal({ id }, 'delete').catch(e => console.warn('[Storage] Sync goal delete error:', e));
+      }
+    }
+    return removed;
   }
 
   function depositToGoal(id, amount) {
@@ -339,6 +398,9 @@ const FTStorage = (() => {
     const delta = Number(amount) || 0;
     goal.currentAmount = Math.max(0, goal.currentAmount + delta);
     saveGoals(list);
+    if (isCloudEnabled()) {
+      FTSupabase.syncGoal(goal, 'upsert').catch(e => console.warn('[Storage] Sync goal error:', e));
+    }
     return goal;
   }
 
@@ -373,14 +435,23 @@ const FTStorage = (() => {
     const record = normalizeCustomCategory({ ...cat, id: uid('cat') });
     list.push(record);
     saveCustomCategories(list);
+    if (isCloudEnabled()) {
+      FTSupabase.syncCategory(record, 'upsert').catch(e => console.warn('[Storage] Sync category error:', e));
+    }
     return record;
   }
 
   function deleteCustomCategory(id) {
     const list = getCustomCategories();
     const next = list.filter(c => c.id !== id);
-    if (next.length !== list.length) saveCustomCategories(next);
-    return next.length !== list.length;
+    const removed = next.length !== list.length;
+    if (removed) {
+      saveCustomCategories(next);
+      if (isCloudEnabled()) {
+        FTSupabase.syncCategory({ id }, 'delete').catch(e => console.warn('[Storage] Sync category delete error:', e));
+      }
+    }
+    return removed;
   }
 
   /* ------------------------------------------------------------- settings */
@@ -410,6 +481,11 @@ const FTStorage = (() => {
         }
       }
     }
+
+    if (isCloudEnabled()) {
+      FTSupabase.syncProfile(next).catch(e => console.warn('[Storage] Sync profile error:', e));
+    }
+
     return next;
   }
 
@@ -518,15 +594,86 @@ const FTStorage = (() => {
     emit('clear');
   }
 
+  /* ---------------------------------------------------- cloud sync helpers */
+  async function syncFromSupabase() {
+    if (!isCloudEnabled()) return false;
+    const email = getActiveEmail();
+    if (!email) return false;
+
+    try {
+      const cloudData = await FTSupabase.fetchUserData();
+      if (!cloudData) return false;
+
+      let changed = false;
+
+      if (Array.isArray(cloudData.transactions) && cloudData.transactions.length > 0) {
+        write(KEYS.transactions, cloudData.transactions.map(normalizeTransaction));
+        changed = true;
+      }
+
+      if (Array.isArray(cloudData.budgets) && cloudData.budgets.length > 0) {
+        write(KEYS.budgets, cloudData.budgets.map(normalizeBudget));
+        changed = true;
+      }
+
+      if (Array.isArray(cloudData.goals) && cloudData.goals.length > 0) {
+        write(KEYS.goals, cloudData.goals.map(normalizeGoal));
+        changed = true;
+      }
+
+      if (Array.isArray(cloudData.customCategories) && cloudData.customCategories.length > 0) {
+        write(KEYS.customCategories, cloudData.customCategories.map(normalizeCustomCategory));
+        changed = true;
+      }
+
+      if (cloudData.profile) {
+        const currentSettings = read(KEYS.settings, {});
+        write(KEYS.settings, { ...DEFAULT_SETTINGS, ...currentSettings, ...cloudData.profile });
+        changed = true;
+      }
+
+      writeRaw(KEYS.seeded, 'true');
+      if (changed) {
+        emit('sync', { source: 'supabase' });
+      }
+      return true;
+    } catch (err) {
+      console.warn('[FTStorage] Error syncing from Supabase:', err);
+      return false;
+    }
+  }
+
+  async function uploadToSupabase() {
+    if (!isCloudEnabled()) throw new Error('Supabase is not configured.');
+    const localData = {
+      transactions: getTransactions(),
+      budgets: getBudgets(),
+      goals: getGoals(),
+      customCategories: getCustomCategories(),
+      settings: getSettings()
+    };
+    return await FTSupabase.uploadAllLocalData(localData);
+  }
+
+  // Automatically sync from Supabase in the background if active
+  if (typeof window !== 'undefined') {
+    setTimeout(() => {
+      if (getActiveEmail() && isCloudEnabled()) {
+        syncFromSupabase();
+      }
+    }, 150);
+  }
+
   return {
     KEYS, DEFAULT_SETTINGS, uid,
-    registerUser, loginUser, logoutUser, getCurrentUser, findUserByEmail,
+    registerUser, loginUser, logoutUser, getCurrentUser, findUserByEmail, setSessionUser,
     requestPasswordReset, resetPassword,
     getTransactions, saveTransactions, addTransaction, updateTransaction, deleteTransaction, getTransaction,
     getBudgets, saveBudgets, addBudget, updateBudget, deleteBudget, budgetExists,
     getGoals, saveGoals, addGoal, updateGoal, deleteGoal, depositToGoal,
     getCustomCategories, saveCustomCategories, addCustomCategory, deleteCustomCategory,
-    getSettings, saveSettings, seedSampleData, exportData, importData, clearAllData
+    getSettings, saveSettings, seedSampleData, exportData, importData, clearAllData,
+    syncFromSupabase, uploadToSupabase, isCloudEnabled
   };
 })();
 

@@ -4,7 +4,7 @@
    Uses Network-First for local HTML/CSS/JS so new releases show instantly.
    ========================================================================== */
 
-const CACHE_NAME = 'fintrack-v2.9';
+const CACHE_NAME = 'fintrack-v3.0';
 
 const STATIC_ASSETS = [
   './',
@@ -22,6 +22,8 @@ const STATIC_ASSETS = [
   'css/reports.css',
   'css/settings.css',
   'css/responsive.css',
+  'js/supabase-config.js',
+  'js/supabase.js',
   'js/storage.js',
   'js/app.js',
   'js/dashboard.js',
@@ -31,6 +33,7 @@ const STATIC_ASSETS = [
   'js/settings.js',
   'js/auth.js',
   'js/vendor/html2pdf.bundle.min.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'
@@ -67,8 +70,8 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Bypass external APIs
-  if (url.hostname.includes('disify.com')) {
+  // Bypass external APIs and Supabase cloud calls
+  if (url.hostname.includes('disify.com') || url.hostname.includes('supabase.co')) {
     return;
   }
 

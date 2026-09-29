@@ -367,7 +367,14 @@
       catCustomColor: FT.$('#catCustomColor'),
       colorSwatches: FT.$('#colorSwatches'),
       expenseCategoryList: FT.$('#expenseCategoryList'),
-      incomeCategoryList: FT.$('#incomeCategoryList')
+      incomeCategoryList: FT.$('#incomeCategoryList'),
+      supabaseUrl: FT.$('#supabaseUrlInput'),
+      supabaseAnonKey: FT.$('#supabaseAnonKeyInput'),
+      supabaseBadge: FT.$('#supabaseStatusBadge'),
+      saveSupabaseBtn: FT.$('#saveSupabaseConfigBtn'),
+      testSupabaseBtn: FT.$('#testSupabaseBtn'),
+      uploadLocalDataBtn: FT.$('#uploadLocalDataBtn'),
+      clearSupabaseBtn: FT.$('#clearSupabaseConfigBtn')
     });
 
     fillForm();
@@ -543,6 +550,7 @@
 
     initSwatches();
     renderCategories();
+    initSupabaseSettings();
 
     // Keep the radio buttons in sync with the topbar theme toggle
     document.addEventListener('ft:themechange', (e) => {
@@ -667,6 +675,128 @@
     FTStorage.deleteCustomCategory(id);
     renderCategories();
     FT.toast(`Deleted "${name}".`, 'success', { force: true });
+  }
+
+  /* ------------------------------------------------ Supabase Settings */
+  function renderSupabaseUI() {
+    if (!els.supabaseUrl || !els.supabaseAnonKey) return;
+    const config = window.FinTrackSupabaseConfig ? window.FinTrackSupabaseConfig.get() : { isConfigured: false, url: '', anonKey: '' };
+    els.supabaseUrl.value = config.url || '';
+    els.supabaseAnonKey.value = config.anonKey || '';
+
+    if (els.supabaseBadge) {
+      if (config.isConfigured) {
+        els.supabaseBadge.dataset.status = 'connected';
+        els.supabaseBadge.className = 'badge badge--income';
+        els.supabaseBadge.textContent = 'Connected';
+      } else {
+        els.supabaseBadge.dataset.status = 'disconnected';
+        els.supabaseBadge.className = 'badge badge--warning';
+        els.supabaseBadge.textContent = 'Not Configured';
+      }
+    }
+  }
+
+  function initSupabaseSettings() {
+    renderSupabaseUI();
+
+    if (els.saveSupabaseBtn) {
+      els.saveSupabaseBtn.addEventListener('click', async () => {
+        const url = (els.supabaseUrl.value || '').trim();
+        const anonKey = (els.supabaseAnonKey.value || '').trim();
+
+        if (url && !url.startsWith('https://')) {
+          FT.toast('Project URL must begin with https://', 'warning', { force: true });
+          return;
+        }
+
+        window.FinTrackSupabaseConfig.save(url, anonKey);
+        renderSupabaseUI();
+
+        if (url && anonKey) {
+          try {
+            await FTSupabase.testConnection();
+            FT.toast('Supabase connected successfully!', 'success', { force: true });
+          } catch (err) {
+            FT.toast(err.message || 'Config saved, but connection test failed.', 'warning', { force: true });
+          }
+        } else {
+          FT.toast('Supabase configuration cleared.', 'info', { force: true });
+        }
+      });
+    }
+
+    if (els.testSupabaseBtn) {
+      els.testSupabaseBtn.addEventListener('click', async () => {
+        try {
+          await FTSupabase.testConnection();
+          FT.toast('Connection test passed! Supabase is responding.', 'success', { force: true });
+        } catch (err) {
+          FT.toast(err.message || 'Connection failed.', 'error', { force: true });
+        }
+      });
+    }
+
+    if (els.uploadLocalDataBtn) {
+      els.uploadLocalDataBtn.addEventListener('click', async () => {
+        const confirmed = await FT.confirmAction({
+          title: 'Sync Local Data to Supabase?',
+          message: 'This will upload all existing local transactions, budgets, goals, and categories from this browser to your Supabase cloud database.',
+          confirmText: 'Upload to Cloud'
+        });
+
+        if (!confirmed) return;
+
+        const origText = els.uploadLocalDataBtn.textContent;
+        els.uploadLocalDataBtn.disabled = true;
+        els.uploadLocalDataBtn.textContent = 'Uploading…';
+
+        try {
+          await FTStorage.uploadToSupabase();
+          FT.toast('All local data uploaded to Supabase successfully!', 'success', { force: true });
+        } catch (err) {
+          FT.toast(err.message || 'Failed to upload local data.', 'error', { force: true });
+        } finally {
+          els.uploadLocalDataBtn.disabled = false;
+          els.uploadLocalDataBtn.textContent = origText;
+        }
+      });
+    }
+
+    if (els.clearSupabaseBtn) {
+      els.clearSupabaseBtn.addEventListener('click', async () => {
+        const confirmed = await FT.confirmAction({
+          title: 'Disconnect Supabase?',
+          message: 'FinTrack will switch back to local browser storage mode. Your data in Supabase will not be deleted.',
+          confirmText: 'Disconnect',
+          danger: true
+        });
+
+        if (!confirmed) return;
+        window.FinTrackSupabaseConfig.clear();
+        renderSupabaseUI();
+        FT.toast('Disconnected from Supabase.', 'info', { force: true });
+      });
+    }
+
+    // Password toggle for anon key field
+    document.querySelectorAll('.supabase-config-form .password-toggle').forEach((toggle) => {
+      const input = toggle.closest('.password-wrap').querySelector('input');
+      const reveal = (e) => {
+        if (e) e.preventDefault();
+        input.type = 'text';
+        toggle.classList.add('is-visible');
+        toggle.setAttribute('aria-pressed', 'true');
+      };
+      const hide = () => {
+        input.type = 'password';
+        toggle.classList.remove('is-visible');
+        toggle.setAttribute('aria-pressed', 'false');
+      };
+      toggle.addEventListener('pointerdown', reveal);
+      toggle.addEventListener('pointerup', hide);
+      toggle.addEventListener('pointercancel', hide);
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);
